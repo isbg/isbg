@@ -5,12 +5,11 @@
 # the message is copied to another folder, and the original
 # marked or deleted.
 
-# This software is written and maintained by Roger Binns
-# <rogerb@rogerbinns.com> It is distributed under the <a
-# href="http://www.opensource.org/licenses/artistic-license.php">Artistic
-# License</a>.
-
-# $Id: isbg.py,v 1.13 2003/03/27 08:20:20 rogerb Exp $
+# This software was mainly written Roger Binns
+# <rogerb@rogerbinns.com> and maintained by Thomas Lecavelier
+# <thomas@lecavelier.name> since novembre 2009. It is
+# You may use isbg under any OSI approved open source license
+# such as those listed at http://opensource.org/licenses/alphabetical
 
 version="0.97-26Mar03"
 
