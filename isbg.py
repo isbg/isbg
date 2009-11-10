@@ -11,18 +11,17 @@
 # You may use isbg under any OSI approved open source license
 # such as those listed at http://opensource.org/licenses/alphabetical
 
-version="0.97-26Mar03"
+version="0.98"
 
 import imaplib
 import sys
 import re
 import os
-import popen2
 import getpass
 import getopt
 import string
 import socket
-import md5
+import hashlib
 
 # You can specify your imap password using a command line option (--imappassword).
 # This however is a really bad idea since any user on the system can run
@@ -36,6 +35,9 @@ usessl=0
 imappassword=None
 imapinbox="INBOX"
 spaminbox="INBOX.spam"
+learnspambox="INBOX.spam.learnspam"
+learnhambox="INBOX.spam.learnham"
+learnthendestroy=0
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
 passwordfilename=None  # where the password is stored if requested
@@ -101,6 +103,8 @@ All options are optional
   --imapuser username   Who you login as [%s]
   --imapinbox mbox      Name of your inbox folder [%s]
   --spaminbox mbox      Name of your spam folder [%s]
+  --learnspambox mbox   Name of your learn spam folder [%s]
+  --learnhambox mbox    Name of your learn ham folder [%s]
   --maxsize numbytes    Messages larger than this will be ignored as they are
                         unlikely to be spam [%d]
   --noreport            Don't include the SpamAssassin report in the message
@@ -116,7 +120,7 @@ All options are optional
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
   
-See http://www.rogerbinns.com/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox,thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
@@ -157,7 +161,7 @@ longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
        "trackfile=", "spamc", "ssl", "savepw", "nostats", "exitcodes",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
-       "help", "version", "imapport=", "passwordfilename="
+       "help", "version", "imapport=", "passwordfilename=", "learnhambox=", "learnspambox="
        ]
 
 try:
@@ -220,7 +224,7 @@ if imapport==0:
 
 if pastuidsfile is None:
     pastuidsfile=os.path.expanduser("~"+os.sep+".isbg-track")
-    m=md5.new()
+    m=hashlib.md5()
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
@@ -246,7 +250,7 @@ def setpw(pw, hash):
     return string.join(res, '')
 
 if passwordfilename is None:
-    m=md5.new()
+    m=hashlib.md5()
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
@@ -254,7 +258,7 @@ if passwordfilename is None:
 
 if passwordhash is None:
     # We make hash that the password is xor'ed against
-    m=md5.new()
+    m=hashlib.md5()
     m.update(imaphost)
     m.update(m.digest())
     m.update(imapuser)
