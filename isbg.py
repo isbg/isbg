@@ -586,14 +586,6 @@ if learnhambox:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
 
-# only useful if we marked messages Deleted
-if expunge:
-    imap.expunge()
-
-# sign off
-imap.logout()
-del imap
-
 if not teachonly:
   # Now tidy up lists of uids
   newpastuids=[]
@@ -612,6 +604,15 @@ if not teachonly:
       f.write(`newpastuids`)
       f.write("\n")
       f.close()
+
+# only useful if we marked messages Deleted
+if expunge:
+    imap.expunge()
+
+# sign off
+imap.logout()
+del imap
+
 
 if stats:
   if learnspambox:
