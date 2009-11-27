@@ -594,23 +594,24 @@ if expunge:
 imap.logout()
 del imap
 
-# Now tidy up lists of uids
-newpastuids=[]
-for i in pastuids:
-    if i in alluids and i not in newpastuids:
-        newpastuids.append(i)
+if not teachonly:
+  # Now tidy up lists of uids
+  newpastuids=[]
+  for i in pastuids:
+      if i in alluids and i not in newpastuids:
+          newpastuids.append(i)
 
-# only write out pastuids if it has changed
-if newpastuids!=origpastuids:
-    f=open(pastuidsfile, "w+")
-    try:
-        os.chmod(pastuidsfile, 0600)
-    except:
-        pass
-    f.write("pastuids=")
-    f.write(`newpastuids`)
-    f.write("\n")
-    f.close()
+  # only write out pastuids if it has changed
+  if newpastuids!=origpastuids:
+      f=open(pastuidsfile, "w+")
+      try:
+          os.chmod(pastuidsfile, 0600)
+      except:
+          pass
+      f.write("pastuids=")
+      f.write(`newpastuids`)
+      f.write("\n")
+      f.close()
 
 if stats:
   if learnspambox:
