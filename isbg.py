@@ -578,7 +578,7 @@ if learnhambox:
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)
+      out = p.communicate(body)[0]
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
       if verbose: print u, out
