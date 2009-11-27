@@ -23,7 +23,11 @@ import getpass
 import getopt
 import string
 import socket
-import hashlib
+
+try:
+  from hashlib import md5
+except ImportError:
+  from md5 import md5
 
 # You can specify your imap password using a command line option (--imappassword).
 # This however is a really bad idea since any user on the system can run
@@ -230,7 +234,7 @@ if imapport==0:
 
 if pastuidsfile is None:
     pastuidsfile=os.path.expanduser("~"+os.sep+".isbg-track")
-    m=hashlib.md5()
+    m=md5()
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
@@ -256,7 +260,7 @@ def setpw(pw, hash):
     return string.join(res, '')
 
 if passwordfilename is None:
-    m=hashlib.md5()
+    m=md5()
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
@@ -264,7 +268,7 @@ if passwordfilename is None:
 
 if passwordhash is None:
     # We make hash that the password is xor'ed against
-    m=hashlib.md5()
+    m=md5()
     m.update(imaphost)
     m.update(m.digest())
     m.update(imapuser)
