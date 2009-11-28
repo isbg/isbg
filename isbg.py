@@ -11,7 +11,7 @@
 # You may use isbg under any OSI approved open source license
 # such as those listed at http://opensource.org/licenses/alphabetical
 
-version="0.98_RC1"
+version="0.98"
 
 from subprocess import Popen, PIPE
 
@@ -545,6 +545,9 @@ if len(spamlist):
             res=imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
             pastuids.append(u)
+    if expunge:
+      imap.expunge()
+
 
 nummsg=len(uids)
 numspam=len(spamlist)
@@ -585,6 +588,9 @@ if learnhambox:
       if learnthendestroy:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+  if expunge:
+    imap.expunge()
+
 
 if not teachonly:
   # Now tidy up lists of uids
@@ -604,10 +610,6 @@ if not teachonly:
       f.write(`newpastuids`)
       f.write("\n")
       f.close()
-
-# only useful if we marked messages Deleted
-if expunge:
-    imap.expunge()
 
 # sign off
 imap.logout()
