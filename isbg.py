@@ -149,7 +149,7 @@ def hexdigit(c):
     if c>='a' and c<='f':
         return 10+ord(c)-ord('a')
     if c>='A' and c<='F':
-        return 10+ord(c)-ord('a')
+        return 10+ord(c)-ord('A')
     raise ValueError(`c`+"is not a valid hexadecimal digit")
 
 def dehexof(x):
