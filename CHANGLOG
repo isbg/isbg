@@ -1,0 +1,8 @@
+0.99 (20091215)
+===============
+  * Bug fix: SSL now work.
+
+0.98 (20091201)
+===============
+  * Teach spam and ham from specific folders
+  * Compatibility from py2.4 to py2.6

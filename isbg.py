@@ -11,7 +11,7 @@
 # You may use isbg under any OSI approved open source license
 # such as those listed at http://opensource.org/licenses/alphabetical
 
-version="0.98"
+version="0.99"
 
 from subprocess import Popen, PIPE
 
@@ -400,49 +400,9 @@ def assertok(res,*args):
         sys.stderr.write("\n%s returned %s - aborting\n" % (`args`,  res ))
         sys.exit(exitcodeimap)
 
-# This class implements imap over SSL.
-class IMAP4S(imaplib.IMAP4):
-    def __init__(self, host='', port=993): imaplib.IMAP4.__init__(self, host, port)
-
-    def open(self, host, port):
-        self.baresock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.baresock.connect( (self.host, self.port) )
-        self.ssl=socket.ssl( self.baresock, None, None )
-
-    def read(self, size):
-        res=""
-        while len(res)<size:
-            res=res+self.ssl.read(size-len(res))
-        return res
-
-    def readline(self):
-        # We can only do one character of lookahead, so this is done character by character
-        res=""
-        last=0
-        while last!="\n":
-            last=self.ssl.read(1)
-            res=res+last
-        return res
-
-    def send(self, data):
-        while len(data):
-            l=self.ssl.write(data)
-            if l==len(data): break
-            data=data[l:]
-
-    def shutdown(self):
-        del self.ssl
-        self.baresock.close()
-    
-    def socket(self):
-        """Do not send or receive any data on the returned socket otherwise you
-        will break the ssl connection.  Only set socket options and that sort
-        of thing"""
-        return self.baresock
-
 # Main code starts here
 if usessl:
-    imap=IMAP4S(imaphost, imapport)
+    imap=imaplib.IMAP4_SSL(imaphost, imapport)
 else:
     imap=imaplib.IMAP4(imaphost,imapport)
 
