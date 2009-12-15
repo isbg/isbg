@@ -84,6 +84,8 @@ exitcodenewmsgspam=3 # there were new messages and new spam
 exitcodeflags=10     # there were errors in the command line arguments
 exitcodeimap=11      # there was an IMAP level error
 exitcodespamc=12     # there was error when communicating between spamc and spamd
+                     #
+exitcodetty=20       # there was an error because we're not in an interactive tty
 
 # IMAP implementation detail
 # Courier IMAP ignores uid fetches where more than a certain number are listed
@@ -296,6 +298,9 @@ if imappassword is None:
         
     # do we have to prompt?
     if imappassword is None:
+        if not os.stdin.isatty():
+          print "You need to specify your imap password and save it with the --savepw switch"
+          sys.exit(exitcodeok)
         imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
 
     # Should we save it?
