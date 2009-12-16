@@ -48,6 +48,8 @@ learnthendestroy=0
 interactive=sys.stdin.isatty()
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
+lockfile=None
+lockfilename=None
 passwordfilename=None  # where the password is stored if requested
 savepw=0               # save the password
 alreadylearnt="Message was already un/learned"
@@ -87,6 +89,7 @@ exitcodeimap=11      # there was an IMAP level error
 exitcodespamc=12     # there was error when communicating between spamc and spamd
                      #
 exitcodetty=20       # there was an error because we're not in an interactive tty
+exitcodelocked=30    # there's certainly another isbg running
 
 # IMAP implementation detail
 # Courier IMAP ignores uid fetches where more than a certain number are listed
@@ -227,6 +230,8 @@ for p in opts:
         sys.exit(0)
     elif p[0]=="--trackfile":
         pastuidsfile=p[1]
+    elif p[0]=="--lockfilename":
+        lockfilename=p[1]
     else:
         locals()[p[0][2:]]=p[1]
 
@@ -247,6 +252,9 @@ if pastuidsfile is None:
     m.update(`imapport`)
     res=hexof(m.digest())
     pastuidsfile=pastuidsfile+res
+
+if lockfilename is None:
+    lockfilename=os.path.expanduser("~"+os.sep+".isbg-lock")
 
 # Password stuff
 def getpw(data,hash):
@@ -288,9 +296,20 @@ if passwordhash is None:
         passwordhash=passwordhash+m.digest()
 
 if verbose:
+    print "Lock file is", lockfilename
     print "Trackfile is", pastuidsfile
     print "SpamFlags are", spamflags
     print "Password file is", passwordfilename
+
+# Acquirelockfilename or exit
+if os.path.exists(lockfilename):
+  if interactive:
+    print "Lock file is present. Guessing isbg is already running. Exit."
+  exit(exitcodelocked)
+else:
+  lockfile = open(lockfilename, 'w')
+  lockfile.write(`os.getpid()`)
+  lockfile.close()
 
 # Figure out the password
 if imappassword is None:
@@ -602,4 +621,5 @@ if exitcodes and nummsg:
         sys.exit(exitcodenewspam)
     sys.exit(exitcodenewmsgspam)
 
+os.remove(lockfilename)
 sys.exit(exitcodeok)
