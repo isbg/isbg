@@ -138,6 +138,7 @@ See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, 
 def errorexit(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
+    os.remove(lockfilename)
     sys.exit(exitcodeflags)
 
 def addspamflag(flag):
@@ -398,6 +399,7 @@ def getsizes(imap, msgs):
 # Retrieve the entire message
 def getmessage(uid, append_to=None):
     res = imap.uid("FETCH", uid, "(RFC822)")
+    assertok(res, 'uid fetch', uid, '(RFC822)')
     body=res[1][0][1]
     if res[0]!="OK":
         assertok(res, 'uid fetch', uid, '(RFC822)')
@@ -426,6 +428,7 @@ def assertok(res,*args):
     if verbose:
         print `args`, "=", res
     if res[0]!="OK":
+        os.remove(lockfilename)
         sys.stderr.write("\n%s returned %s - aborting\n" % (`args`,  res ))
         sys.exit(exitcodeimap)
 
