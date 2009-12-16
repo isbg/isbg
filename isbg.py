@@ -304,7 +304,7 @@ if verbose:
 
 # Acquirelockfilename or exit
 if os.path.exists(lockfilename):
-  if interactive:
+  if verbose:
     print "Lock file is present. Guessing isbg is already running. Exit."
   exit(exitcodelocked)
 else:
