@@ -45,6 +45,7 @@ teachonly=0
 learnspambox=None
 learnhambox=None
 learnthendestroy=0
+interactive=sys.stdin.isatty()
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
 passwordfilename=None  # where the password is stored if requested
@@ -123,11 +124,12 @@ All options are optional
   --verbose             Show IMAP stuff happening
   --spamc               Use spamc instead of standalone SpamAssassin binary
   --savepw              Store the password to be used in future runs
+  --noninteractive      Prevent interactive requests
   --nostats             Don't print stats
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
   
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, learnthendestroy, thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, (not interactive), learnthendestroy, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
@@ -167,6 +169,7 @@ longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
        "maxsize=", "noreport", "flag", "delete", "expunge", "verbose",
        "trackfile=", "spamc", "ssl", "savepw", "nostats", "exitcodes",
        "learnhambox=", "learnspambox=", "teachonly", "learnthendestroy",
+       "noninteractive",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
        "help", "version", "imapport=", "passwordfilename=" 
@@ -192,6 +195,8 @@ for p in opts:
         imapport=int(p[1])
     elif p[0]=="--noreport":
         increport=0
+    elif p[0]=="--noninteractive":
+        interactive=0
     elif p[0]=="--flag":
         addspamflag("\\Flagged")
     elif p[0]=="--delete":
@@ -298,7 +303,7 @@ if imappassword is None:
         
     # do we have to prompt?
     if imappassword is None:
-        if not os.stdin.isatty():
+        if not interactive:
           print "You need to specify your imap password and save it with the --savepw switch"
           sys.exit(exitcodeok)
         imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
