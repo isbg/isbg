@@ -305,7 +305,7 @@ if verbose:
 # Acquirelockfilename or exit
 if os.path.exists(lockfilename):
   if verbose:
-    print "Lock file is present. Guessing isbg is already running. Exit."
+    print "\nLock file is present. Guessing isbg is already running. Exit."
   exit(exitcodelocked)
 else:
   lockfile = open(lockfilename, 'w')
@@ -400,7 +400,6 @@ def getsizes(imap, msgs):
 def getmessage(uid, append_to=None):
     res = imap.uid("FETCH", uid, "(RFC822)")
     assertok(res, 'uid fetch', uid, '(RFC822)')
-    body=res[1][0][1]
     if res[0]!="OK":
         assertok(res, 'uid fetch', uid, '(RFC822)')
         try:
@@ -411,6 +410,8 @@ def getmessage(uid, append_to=None):
                 print "The message was probably deleted while we are running"
             if append_to:
                 append_to.append(uid)
+    else:
+      body=res[1][0][1]
     return body
 
 # This function makes sure that each lines ends in <CR><LF>
