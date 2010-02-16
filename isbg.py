@@ -62,6 +62,8 @@ spamflagscmd="+FLAGS.SILENT"
 spamflags="("
 # include the spamassassin report in the message placed in spaminbox
 increport=1
+# delete messages with a score higher then this
+deletehigherthen=0
 # expunge before quiting causing all messages marked for deletion
 # to actually be deleted
 expunge=0
@@ -107,7 +109,7 @@ All options are optional
   --imapuser username   Who you login as [%s]
   --imapinbox mbox      Name of your inbox folder [%s]
   --spaminbox mbox      Name of your spam folder [%s]
-  --teachonly           Don't search spam, just learn from folders [%s]
+  --teachonly           Don't search spam, just learn from folders
   --learnspambox mbox   Name of your learn spam folder [%s]
   --learnhambox mbox    Name of your learn ham folder [%s]
   --movehamto mbox      Move ham to folder [%s]
@@ -118,6 +120,7 @@ All options are optional
                         copied to your spam folder
   --flag                The spams will be flagged in your inbox
   --delete              The spams will be marked for deletion from your inbox
+  --deletehigherthen #  Delete any spam with a score higher then #
   --expunge             Cause marked for deletion messages to also be deleted
                         (only useful if --delete is specified)
   --verbose             Show IMAP stuff happening
@@ -127,7 +130,7 @@ All options are optional
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
   
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, movehamto, learnthendestroy, thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, learnthendestroy, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
@@ -164,7 +167,7 @@ def dehexof(x):
 
 # argument processing
 longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
-       "maxsize=", "noreport", "flag", "delete", "expunge", "verbose",
+       "maxsize=", "noreport", "flag", "delete", "deletehigherthen", "expunge", "verbose",
        "trackfile=", "spamc", "ssl", "savepw", "nostats", "exitcodes",
        "learnhambox=", "movehamto=", "learnspambox=", "teachonly",
        "learnthendestroy",
@@ -189,6 +192,13 @@ for p in opts:
             errorexit("Unrecognized size - "+p[1])
         if thresholdsize<1:
             errorexit("Size "+`thresholdsize`+" is too small")
+    elif p[0]=="--deletehigherthen":
+        try:
+            deletehigherthen=float(p[1])
+        except:
+            errorexit("Unrecognized score - "+p[1])
+        if deletehigherthen<1:
+            errorexit("Score "+`deletehigherthen`+" is too small")
     elif p[0]=="--imapport":
         imapport=int(p[1])
     elif p[0]=="--noreport":
@@ -476,6 +486,10 @@ for u in uids:
     else:
         # Message is spam
         if verbose: print u, "is spam"
+        
+        if deletehigherthen and float(score) > deletehigherthen:
+          res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+          assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
 
         # do we want to include the spam report
         if increport:
@@ -497,6 +511,9 @@ for u in uids:
             assertok(res, "uid copy", u, spaminbox)
 
         spamlist.append(u)
+
+if deletehigherthen:
+  imap.expunge()
 
 # If we found any spams, now go and mark the original messages
 if len(spamlist):
