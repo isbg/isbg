@@ -44,6 +44,7 @@ spaminbox="INBOX.spam"
 teachonly=0
 learnspambox=None
 learnhambox=None
+movehamto=None
 learnthendestroy=0
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
@@ -109,6 +110,7 @@ All options are optional
   --teachonly           Don't search spam, just learn from folders [%s]
   --learnspambox mbox   Name of your learn spam folder [%s]
   --learnhambox mbox    Name of your learn ham folder [%s]
+  --movehamto mbox      Move ham to folder [%s]
   --learnthendestroy    Mark learnt messages for deletion [%s]
   --maxsize numbytes    Messages larger than this will be ignored as they are
                         unlikely to be spam [%d]
@@ -125,7 +127,7 @@ All options are optional
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
   
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, learnthendestroy, thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, movehamto, learnthendestroy, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
@@ -164,7 +166,8 @@ def dehexof(x):
 longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
        "maxsize=", "noreport", "flag", "delete", "expunge", "verbose",
        "trackfile=", "spamc", "ssl", "savepw", "nostats", "exitcodes",
-       "learnhambox=", "learnspambox=", "teachonly", "learnthendestroy",
+       "learnhambox=", "movehamto=", "learnspambox=", "teachonly",
+       "learnthendestroy",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
        "help", "version", "imapport=", "passwordfilename=" 
@@ -530,6 +533,8 @@ if learnspambox:
       if learnthendestroy:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+  if expunge:
+    imap.expunge()
 
 if learnhambox:
   if verbose: print "Teach HAM to SA from:", learnhambox
@@ -545,14 +550,19 @@ if learnhambox:
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
       if verbose: print u, out
-      if learnthendestroy:
+      if movehamto:
+        res=imap.uid("COPY", u, movehamto)
+        assertok(res, "uid copy", u, movehamto)
+      if learnthendestroy or movehamto:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-  if expunge:
+      if not learnthendestroy or movehamto:
+        pastuids.append(u)
+  if expunge or movehamto:
     imap.expunge()
 
 
-if not teachonly:
+if not teachonly or learnhambox:
   # Now tidy up lists of uids
   newpastuids=[]
   for i in pastuids:
