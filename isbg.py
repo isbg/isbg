@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # This Python program scans an IMAP Inbox and runs every
-# entry against SpamAssassin.  For any entries that match,
+# entry against SpamAssassin. For any entries that match,
 # the message is copied to another folder, and the original
 # marked or deleted.
 
@@ -31,12 +31,12 @@ except ImportError:
 
 # You can specify your imap password using a command line option (--imappassword).
 # This however is a really bad idea since any user on the system can run
-# ps and see the command line arguments.  If you really must do it non-interactively
+# ps and see the command line arguments. If you really must do it non-interactively
 # then set the password here.
 
 imapuser=getpass.getuser()
 imaphost='localhost'
-imapport=0  # autodetect - 143 for standard connection, 993 for imaps
+imapport=0 # autodetect - 143 for standard connection, 993 for imaps
 usessl=0
 imappassword=None
 imapinbox="INBOX"
@@ -46,10 +46,13 @@ learnspambox=None
 learnhambox=None
 movehamto=None
 learnthendestroy=0
+interactive=sys.stdin.isatty()
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
-passwordfilename=None  # where the password is stored if requested
-savepw=0               # save the password
+lockfile=None
+lockfilename=None
+passwordfilename=None # where the password is stored if requested
+savepw=0              # save the password
 alreadylearnt="Message was already un/learned"
 
 # satest is what command is used test if the message is spam
@@ -81,18 +84,21 @@ exitcodes=0
 exitcodeok=0         # all went well
 exitcodenewmsgs=1    # there were new messages - none of them spam
                      #                         (if exitcodes is on)
-exitcodenewspam=2    # they were all spams    ( if exitcodes is on)
+exitcodenewspam=2    # they were all spams     (if exitcodes is on)
 exitcodenewmsgspam=3 # there were new messages and new spam
                      #                         (if exitcodes is on)
 exitcodeflags=10     # there were errors in the command line arguments
 exitcodeimap=11      # there was an IMAP level error
 exitcodespamc=12     # there was error when communicating between spamc and spamd
+                     #
+exitcodetty=20       # there was an error because we're not in an interactive tty
+exitcodelocked=30    # there's certainly another isbg running
 
 # IMAP implementation detail
 # Courier IMAP ignores uid fetches where more than a certain number are listed
 # so we break them down into smaller groups of this size
 uidfetchbatchsize=25
-# password saving stuff.  A vague level of obfuscation
+# password saving stuff. A vague level of obfuscation
 passwordhashlen=256 # should be a multiple of 16
 passwordhash=None
 
@@ -113,7 +119,7 @@ All options are optional
   --learnspambox mbox   Name of your learn spam folder [%s]
   --learnhambox mbox    Name of your learn ham folder [%s]
   --movehamto mbox      Move ham to folder [%s]
-  --learnthendestroy    Mark learnt messages for deletion [%s]
+  --learnthendestroy    Mark learnt messages for deletion
   --maxsize numbytes    Messages larger than this will be ignored as they are
                         unlikely to be spam [%d]
   --noreport            Don't include the SpamAssassin report in the message
@@ -126,16 +132,17 @@ All options are optional
   --verbose             Show IMAP stuff happening
   --spamc               Use spamc instead of standalone SpamAssassin binary
   --savepw              Store the password to be used in future runs
+  --noninteractive      Prevent interactive requests
   --nostats             Don't print stats
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
-  
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, learnthendestroy, thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
+    os.remove(lockfilename)
     sys.exit(exitcodeflags)
 
 def addspamflag(flag):
@@ -167,13 +174,13 @@ def dehexof(x):
 
 # argument processing
 longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
-       "maxsize=", "noreport", "flag", "delete", "deletehigherthen", "expunge", "verbose",
-       "trackfile=", "spamc", "ssl", "savepw", "nostats", "exitcodes",
-       "learnhambox=", "movehamto=", "learnspambox=", "teachonly",
-       "learnthendestroy",
+       "maxsize=", "noreport", "flag", "delete", "deletehigherthen",
+       "expunge", "verbose", "trackfile=", "spamc", "ssl", "savepw",
+       "nostats", "exitcodes", "learnhambox=", "movehamto=",
+       "learnspambox=", "teachonly", "learnthendestroy", "noninteractive",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
-       "help", "version", "imapport=", "passwordfilename=" 
+       "help", "version", "imapport=", "passwordfilename="
        ]
 
 try:
@@ -203,6 +210,8 @@ for p in opts:
         imapport=int(p[1])
     elif p[0]=="--noreport":
         increport=0
+    elif p[0]=="--noninteractive":
+        interactive=0
     elif p[0]=="--flag":
         addspamflag("\\Flagged")
     elif p[0]=="--delete":
@@ -233,6 +242,8 @@ for p in opts:
         sys.exit(0)
     elif p[0]=="--trackfile":
         pastuidsfile=p[1]
+    elif p[0]=="--lockfilename":
+        lockfilename=p[1]
     else:
         locals()[p[0][2:]]=p[1]
 
@@ -253,6 +264,9 @@ if pastuidsfile is None:
     m.update(`imapport`)
     res=hexof(m.digest())
     pastuidsfile=pastuidsfile+res
+
+if lockfilename is None:
+    lockfilename=os.path.expanduser("~"+os.sep+".isbg-lock")
 
 # Password stuff
 def getpw(data,hash):
@@ -294,9 +308,20 @@ if passwordhash is None:
         passwordhash=passwordhash+m.digest()
 
 if verbose:
+    print "Lock file is", lockfilename
     print "Trackfile is", pastuidsfile
     print "SpamFlags are", spamflags
     print "Password file is", passwordfilename
+ 
+# Acquirelockfilename or exit
+if os.path.exists(lockfilename):
+  if verbose:
+    print "\nLock file is present. Guessing isbg is already running. Exit."
+  exit(exitcodelocked)
+else:
+  lockfile = open(lockfilename, 'w')
+  lockfile.write(`os.getpid()`)
+  lockfile.close()
 
 # Figure out the password
 if imappassword is None:
@@ -309,6 +334,9 @@ if imappassword is None:
         
     # do we have to prompt?
     if imappassword is None:
+        if not interactive:
+          print "You need to specify your imap password and save it with the --savepw switch"
+          sys.exit(exitcodeok)
         imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
 
     # Should we save it?
@@ -322,7 +350,7 @@ if imappassword is None:
         f.close()
 
 # pastuids keeps track of which uids we have already seen, so
-# that we don't analyze them multiple times.  We store its
+# that we don't analyze them multiple times. We store its
 # contents between sessions by saving into a file as Python
 # code (makes loading it here real easy since we just source
 # the file)
@@ -382,7 +410,7 @@ def getsizes(imap, msgs):
 # Retrieve the entire message
 def getmessage(uid, append_to=None):
     res = imap.uid("FETCH", uid, "(RFC822)")
-    body=res[1][0][1]
+    assertok(res, 'uid fetch', uid, '(RFC822)')
     if res[0]!="OK":
         assertok(res, 'uid fetch', uid, '(RFC822)')
         try:
@@ -393,6 +421,8 @@ def getmessage(uid, append_to=None):
                 print "The message was probably deleted while we are running"
             if append_to:
                 append_to.append(uid)
+    else:
+      body=res[1][0][1]
     return body
 
 # This function makes sure that each lines ends in <CR><LF>
@@ -410,7 +440,8 @@ def assertok(res,*args):
     if verbose:
         print `args`, "=", res
     if res[0]!="OK":
-        sys.stderr.write("\n%s returned %s - aborting\n" % (`args`,  res ))
+        os.remove(lockfilename)
+        sys.stderr.write("\n%s returned %s - aborting\n" % (`args`, res ))
         sys.exit(exitcodeimap)
 
 # Main code starts here
@@ -447,7 +478,7 @@ if not teachonly:
 
   # for the uids we haven't seen before, get their sizes
   # The code originally got both the UIDs and size at the
-  # same time.  This however took significantly longer as
+  # same time. This however took significantly longer as
   # I assume it stat()ed and perhaps even opened every message,
   # even the ones we had seen before
   sizeduids=getsizes(imap, uids)
@@ -473,13 +504,13 @@ for u in uids:
     # Feed it to SpamAssassin in test mode
     p=Popen(satest, stdin=PIPE, stdout=PIPE, close_fds=True)
     score = p.communicate(body)[0]
-    if score == "0/0":         
+    if score == "0/0":
       sys.stderr.write("spamc -> spamd error - aborting")
       sys.exit(exitcodespamc)
 
     if verbose: print u, "score:", score
 
-    code  = p.returncode
+    code = p.returncode
     if code == 0:
         # Message is below threshold
         pastuids.append(u)
@@ -502,7 +533,7 @@ for u in uids:
             # The above will fail on some IMAP servers for various reasons.
             # we print out what happened and continue processing
             if res[0]!='OK':
-                print `["append", spaminbox, "{body}"]`, "failed for uid "+`u`+": "+`res`+".  Leaving original message alone."
+                print `["append", spaminbox, "{body}"]`, "failed for uid "+`u`+": "+`res`+". Leaving original message alone."
                 pastuids.append(u)
                 continue
         else:
@@ -520,7 +551,7 @@ if len(spamlist):
     res=imap.select(imapinbox)
     assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
-    if len(spamflags)>2:  
+    if len(spamflags)>2:
         for u in spamlist:
             res=imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
@@ -538,7 +569,7 @@ if learnspambox:
   res=imap.select(learnspambox, 0)
   assertok(res, 'select', learnspambox)
   s_tolearn = int(res[1][0])
-  s_learnt  = 0
+  s_learnt = 0
   uids = getuids(imap, 1, s_tolearn)
   for u in uids:
       body = getmessage(u)
@@ -558,7 +589,7 @@ if learnhambox:
   res=imap.select(learnhambox, 0)
   assertok(res, 'select', learnhambox)
   h_tolearn = int(res[1][0])
-  h_learnt  = 0
+  h_learnt = 0
   uids = getuids(imap, 1, h_tolearn)
   for u in uids:
       body = getmessage(u)
@@ -606,7 +637,7 @@ del imap
 if stats:
   if learnspambox:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
-  if learnhambox:  
+  if learnhambox:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
   if not teachonly:
     print "%d spams found in %d messages" % (numspam, nummsg)
@@ -618,5 +649,6 @@ if exitcodes and nummsg:
     if numspam==nummsg:
         sys.exit(exitcodenewspam)
     sys.exit(exitcodenewmsgspam)
-
+ 
+os.remove(lockfilename)
 sys.exit(exitcodeok)
