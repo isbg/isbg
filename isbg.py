@@ -44,15 +44,14 @@ spaminbox="INBOX.spam"
 teachonly=0
 learnspambox=None
 learnhambox=None
-movehamto=None
 learnthendestroy=0
 interactive=sys.stdin.isatty()
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
 lockfile=None
 lockfilename=None
-passwordfilename=None # where the password is stored if requested
-savepw=0              # save the password
+passwordfilename=None  # where the password is stored if requested
+savepw=0               # save the password
 alreadylearnt="Message was already un/learned"
 
 # satest is what command is used test if the message is spam
