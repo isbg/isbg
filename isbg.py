@@ -23,6 +23,7 @@ import getpass
 import getopt
 import string
 import socket
+import time
 
 try:
   from hashlib import md5
@@ -313,7 +314,7 @@ if verbose:
     print "SpamFlags are", spamflags
     print "Password file is", passwordfilename
  
-# Acquirelockfilename or exit
+ Acquirelockfilename or exit
 if os.path.exists(lockfilename):
   if verbose:
     print "\nLock file is present. Guessing isbg is already running. Exit."
@@ -455,6 +456,7 @@ res=imap.login(imapuser, imappassword)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
 uids=[]
+alluids=[]
 
 if not teachonly:
   # check spaminbox exists by examining it
@@ -495,7 +497,10 @@ if not teachonly:
 spamlist=[]
 
 # Main loop that iterates over each new uid we haven't seen before
+progress = 0
+tasktime = 0
 for u in uids:
+    starttime = time.time()
     # Double check
     if u in pastuids: continue
     # Retrieve the entire message
@@ -542,6 +547,14 @@ for u in uids:
             assertok(res, "uid copy", u, spaminbox)
 
         spamlist.append(u)
+    progress = progress+1
+    tasktime = tasktime+(time.time()-starttime)
+    remaningtime = int(tasktime/progress*(len(uids)-progress))
+    status = "Time remaining "
+    if(remaningtime > 60):
+      status = status+str(int(remaningtime/60))+" min and "
+    status = status+str(remaningtime % 60)+" sec."
+    print status
 
 if deletehigherthen:
   imap.expunge()
@@ -571,7 +584,10 @@ if learnspambox:
   s_tolearn = int(res[1][0])
   s_learnt = 0
   uids = getuids(imap, 1, s_tolearn)
+  progress = 0
+  tasktime = 0
   for u in uids:
+      starttime = time.time()
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
@@ -581,6 +597,14 @@ if learnspambox:
       if learnthendestroy:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+      progress = progress+1
+      tasktime = tasktime+(time.time()-starttime)
+      remaningtime = int(tasktime/progress*(len(uids)-progress))
+      status = "Time remaining "
+      if(remaningtime > 60):
+        status = status+str(int(remaningtime/60))+" min and "
+      status = status+str(remaningtime % 60)+" sec."
+      print status
   if expunge:
     imap.expunge()
 
@@ -591,7 +615,10 @@ if learnhambox:
   h_tolearn = int(res[1][0])
   h_learnt = 0
   uids = getuids(imap, 1, h_tolearn)
+  progress = 0
+  tasktime = 0
   for u in uids:
+      starttime = time.time()
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
@@ -606,6 +633,14 @@ if learnhambox:
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
       if not learnthendestroy or movehamto:
         pastuids.append(u)
+      progress = progress+1
+      tasktime = tasktime+(time.time()-starttime)
+      remaningtime = int(tasktime/progress*(len(uids)-progress))
+      status = "Time remaining "
+      if(remaningtime > 60):
+        status = status+str(int(remaningtime/60))+" min and "
+      status = status+str(remaningtime % 60)+" sec."
+      print status
   if expunge or movehamto:
     imap.expunge()
 
@@ -614,7 +649,7 @@ if not teachonly or learnhambox:
   # Now tidy up lists of uids
   newpastuids=[]
   for i in pastuids:
-      if i in alluids and i not in newpastuids:
+      if((i in alluids and i not in newpastuids) or (learnhambox and i in uids)):
           newpastuids.append(i)
 
   # only write out pastuids if it has changed
