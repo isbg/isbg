@@ -23,6 +23,7 @@ import getpass
 import getopt
 import string
 import socket
+import math
 import time
 
 try:
@@ -314,7 +315,7 @@ if verbose:
     print "SpamFlags are", spamflags
     print "Password file is", passwordfilename
  
- Acquirelockfilename or exit
+# Acquirelockfilename or exit
 if os.path.exists(lockfilename):
   if verbose:
     print "\nLock file is present. Guessing isbg is already running. Exit."
@@ -551,8 +552,10 @@ for u in uids:
     tasktime = tasktime+(time.time()-starttime)
     remaningtime = int(tasktime/progress*(len(uids)-progress))
     status = "Time remaining "
-    if(remaningtime > 60):
-      status = status+str(int(remaningtime/60))+" min and "
+    if(remaningtime > 3599):
+      status = status+str(int(math.floor(remaningtime/3600)))+" h, "
+    if(remaningtime > 59):
+      status = status+str(int(math.floor((remaningtime % 3600)/60)))+" min and "
     status = status+str(remaningtime % 60)+" sec."
     print status
 
@@ -601,8 +604,10 @@ if learnspambox:
       tasktime = tasktime+(time.time()-starttime)
       remaningtime = int(tasktime/progress*(len(uids)-progress))
       status = "Time remaining "
-      if(remaningtime > 60):
-        status = status+str(int(remaningtime/60))+" min and "
+      if(remaningtime > 3599):
+        status = status+str(int(math.floor(remaningtime/3600)))+" h, "
+      if(remaningtime > 59):
+        status = status+str(int(math.floor((remaningtime % 3600)/60)))+" min and "
       status = status+str(remaningtime % 60)+" sec."
       print status
   if expunge:
@@ -637,8 +642,10 @@ if learnhambox:
       tasktime = tasktime+(time.time()-starttime)
       remaningtime = int(tasktime/progress*(len(uids)-progress))
       status = "Time remaining "
-      if(remaningtime > 60):
-        status = status+str(int(remaningtime/60))+" min and "
+      if(remaningtime > 3599):
+        status = status+str(int(math.floor(remaningtime/3600)))+" h, "
+      if(remaningtime > 59):
+        status = status+str(int(math.floor((remaningtime % 3600)/60)))+" min and "
       status = status+str(remaningtime % 60)+" sec."
       print status
   if expunge or movehamto:
