@@ -1,6 +1,8 @@
 0.99 (20091215)
 ===============
   * Bug fix: SSL now work.
+  * deletehighterthen, fix expunge, remember ham, movehamto (thank to AJenbo!)
+  * One more attempt when reading fail
 
 0.98 (20091201)
 ===============
