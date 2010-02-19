@@ -136,8 +136,7 @@ All options are optional
   --nostats             Don't print stats
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
-  
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, teachonly, learnspambox, learnhambox, (not interactive), learnthendestroy, thresholdsize))
+See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg):
@@ -456,6 +455,7 @@ res=imap.login(imapuser, imappassword)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
 uids=[]
+alluids=[]
 
 if not teachonly:
   # check spaminbox exists by examining it
@@ -615,7 +615,7 @@ if not teachonly or learnhambox:
   # Now tidy up lists of uids
   newpastuids=[]
   for i in pastuids:
-      if i in alluids and i not in newpastuids:
+      if((i in alluids and i not in newpastuids) or (learnhambox and i in uids)):
           newpastuids.append(i)
 
   # only write out pastuids if it has changed
