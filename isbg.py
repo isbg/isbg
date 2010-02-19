@@ -614,8 +614,12 @@ if learnhambox:
 if not teachonly or learnhambox:
   # Now tidy up lists of uids
   newpastuids=[]
+  if teachonly:
+     newpastuids = pastuids[:]
   for i in pastuids:
-      if((i in alluids and i not in newpastuids) or (learnhambox and i in uids)):
+      if i in alluids and i not in newpastuids:
+          newpastuids.append(i)
+      elif teachonly:
           newpastuids.append(i)
 
   # only write out pastuids if it has changed
@@ -636,6 +640,8 @@ del imap
 
 
 if stats:
+  if not teachonly:
+    print "%d spams found in %d messages" % (numspam, nummsg)
   if learnspambox:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
   if learnhambox:
