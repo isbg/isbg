@@ -362,51 +362,6 @@ except:
 # remember what pastuids looked like so that we can compare at the end
 origpastuids=pastuids[:]
 
-# This function gets the list of uids corresponding
-# to a message range
-gure=re.compile(r"[0-9]+ \(UID ([0-9]+)\)")
-def getuids(imap, low, high):
-    # return empty list for empty mailbox
-    if high<low: return []
-    # request message range
-    range=`low`+":"+`high`
-    res=imap.fetch(range, "UID")
-    assertok(res, 'fetch', range, 'UID')
-    res2=[]
-    for i in res[1]:
-        mo=gure.match(i)
-        if mo is None:
-            if verbose: print "getuids Eh?", i
-        else:
-            res2.append(mo.group(1))
-    return res2
-
-# This function gets the size of each message in the provided
-# list
-gsre=re.compile(r"[0-9]+ \(UID ([0-9]+) RFC822.SIZE ([0-9]+)\)")
-def getsizes(imap, msgs):
-    res2=[]
-
-    # Python really needs do - while
-    while 1:
-        if len(msgs)==0: break
-        if len(msgs)>uidfetchbatchsize:
-            msgmore=msgs[uidfetchbatchsize:]
-            msgs=msgs[:uidfetchbatchsize]
-        else:
-            msgmore=[]
-        msgs=string.join(msgs, ',')
-        res=imap.uid("FETCH", msgs, "(UID RFC822.SIZE)")
-        assertok(res, "uid fetch", msgs, "(UID RFC822.SIZE)")
-        for i in res[1]:
-            mo=gsre.match(i)
-            if mo is None:
-                if verbose: print "getsize Eh?", i
-            else:
-                res2.append((mo.group(2), mo.group(1)))
-        msgs=msgmore
-    return res2
-
 # Retrieve the entire message
 def getmessage(uid, append_to=None):
     res = imap.uid("FETCH", uid, "(RFC822)")
@@ -454,7 +409,7 @@ else:
 res=imap.login(imapuser, imappassword)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
-uids=[]
+inboxuids=[]
 alluids=[]
 
 if not teachonly:
@@ -466,37 +421,15 @@ if not teachonly:
   res=imap.select(imapinbox, 1)
   assertok(res, 'select', imapinbox, 1)
 
-  # it returns number of messages in response
-  low=1
-  high=int(res[1][0])
-
-  # get the corresponding UIDs
-  alluids=getuids(imap,low,high)
-
-  for i in alluids:
-      if i not in pastuids:
-          uids.append(i)
-
-  # for the uids we haven't seen before, get their sizes
-  # The code originally got both the UIDs and size at the
-  # same time. This however took significantly longer as
-  # I assume it stat()ed and perhaps even opened every message,
-  # even the ones we had seen before
-  sizeduids=getsizes(imap, uids)
-  uids=[]
-  for i in sizeduids:
-      if int(i[0])>thresholdsize:
-          pastuids.append(i[1])
-          if verbose:
-              print i[1], "is", i[0], "bytes so it is being skipped"
-      else:
-          uids.append(i[1])
+  # get the uids of all mails with a size less then the thresholdsize
+  typ, inboxuids = imap.uid("SEARCH", None, "SMALLER", thresholdsize)
+  inboxuids = inboxuids[0].split()
 
 # Keep track of new spam uids
 spamlist=[]
 
 # Main loop that iterates over each new uid we haven't seen before
-for u in uids:
+for u in inboxuids:
     # Double check
     if u in pastuids: continue
     # Retrieve the entire message
@@ -547,8 +480,11 @@ for u in uids:
 if deletehigherthen:
   imap.expunge()
 
+nummsg=len(inboxuids)
+numspam=len(spamlist)
+
 # If we found any spams, now go and mark the original messages
-if len(spamlist):
+if numspam:
     res=imap.select(imapinbox)
     assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
@@ -560,10 +496,6 @@ if len(spamlist):
     if expunge:
       imap.expunge()
 
-
-nummsg=len(uids)
-numspam=len(spamlist)
-
 # Spamassassion training
 if learnspambox:
   if verbose: print "Teach SPAM to SA from:", learnspambox
@@ -571,7 +503,8 @@ if learnspambox:
   assertok(res, 'select', learnspambox)
   s_tolearn = int(res[1][0])
   s_learnt = 0
-  uids = getuids(imap, 1, s_tolearn)
+  typ, uids = imap.uid("SEARCH", None, "ALL")
+  uids = uids[0].split()
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
@@ -591,6 +524,8 @@ if learnhambox:
   assertok(res, 'select', learnhambox)
   h_tolearn = int(res[1][0])
   h_learnt = 0
+  typ, uids = imap.uid("SEARCH", None, "ALL")
+  uids = uids[0].split()
   uids = getuids(imap, 1, h_tolearn)
   for u in uids:
       body = getmessage(u)
@@ -611,15 +546,11 @@ if learnhambox:
     imap.expunge()
 
 
-if not teachonly or learnhambox:
+if not teachonly:
   # Now tidy up lists of uids
   newpastuids=[]
-  if teachonly:
-     newpastuids = pastuids[:]
   for i in pastuids:
-      if i in alluids and i not in newpastuids:
-          newpastuids.append(i)
-      elif teachonly:
+      if i in inboxuids and i not in newpastuids:
           newpastuids.append(i)
 
   # only write out pastuids if it has changed
@@ -646,8 +577,6 @@ if stats:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
   if learnhambox:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
-  if not teachonly:
-    print "%d spams found in %d messages" % (numspam, nummsg)
     
 if exitcodes and nummsg:
     res=0
