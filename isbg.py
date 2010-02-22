@@ -409,8 +409,56 @@ else:
 res=imap.login(imapuser, imappassword)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
+# Spamassassion training
+if learnspambox:
+  if verbose: print "Teach SPAM to SA from:", learnspambox
+  res=imap.select(learnspambox, 0)
+  assertok(res, 'select', learnspambox)
+  s_tolearn = int(res[1][0])
+  s_learnt = 0
+  typ, uids = imap.uid("SEARCH", None, "ALL")
+  uids = uids[0].split()
+  for u in uids:
+      body = getmessage(u)
+      p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
+      out = p.communicate(body)[0]
+      p.stdin.close()
+      if not out.strip() == alreadylearnt: s_learnt += 1
+      if verbose: print u, out
+      if learnthendestroy:
+        res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+        assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+  if expunge:
+    imap.expunge()
+
+if learnhambox:
+  if verbose: print "Teach HAM to SA from:", learnhambox
+  res=imap.select(learnhambox, 0)
+  assertok(res, 'select', learnhambox)
+  h_tolearn = int(res[1][0])
+  h_learnt = 0
+  typ, uids = imap.uid("SEARCH", None, "ALL")
+  uids = uids[0].split()
+  uids = getuids(imap, 1, h_tolearn)
+  for u in uids:
+      body = getmessage(u)
+      p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
+      out = p.communicate(body)[0]
+      p.stdin.close()
+      if not out.strip() == alreadylearnt: h_learnt += 1
+      if verbose: print u, out
+      if movehamto:
+        res=imap.uid("COPY", u, movehamto)
+        assertok(res, "uid copy", u, movehamto)
+      if learnthendestroy or movehamto:
+        res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+        assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+      if not learnthendestroy or movehamto:
+        pastuids.append(u)
+  if expunge or movehamto:
+    imap.expunge()
+
 inboxuids=[]
-alluids=[]
 
 if not teachonly:
   # check spaminbox exists by examining it
@@ -495,55 +543,6 @@ if numspam:
             pastuids.append(u)
     if expunge:
       imap.expunge()
-
-# Spamassassion training
-if learnspambox:
-  if verbose: print "Teach SPAM to SA from:", learnspambox
-  res=imap.select(learnspambox, 0)
-  assertok(res, 'select', learnspambox)
-  s_tolearn = int(res[1][0])
-  s_learnt = 0
-  typ, uids = imap.uid("SEARCH", None, "ALL")
-  uids = uids[0].split()
-  for u in uids:
-      body = getmessage(u)
-      p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
-      p.stdin.close()
-      if not out.strip() == alreadylearnt: s_learnt += 1
-      if verbose: print u, out
-      if learnthendestroy:
-        res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-        assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-  if expunge:
-    imap.expunge()
-
-if learnhambox:
-  if verbose: print "Teach HAM to SA from:", learnhambox
-  res=imap.select(learnhambox, 0)
-  assertok(res, 'select', learnhambox)
-  h_tolearn = int(res[1][0])
-  h_learnt = 0
-  typ, uids = imap.uid("SEARCH", None, "ALL")
-  uids = uids[0].split()
-  uids = getuids(imap, 1, h_tolearn)
-  for u in uids:
-      body = getmessage(u)
-      p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
-      p.stdin.close()
-      if not out.strip() == alreadylearnt: h_learnt += 1
-      if verbose: print u, out
-      if movehamto:
-        res=imap.uid("COPY", u, movehamto)
-        assertok(res, "uid copy", u, movehamto)
-      if learnthendestroy or movehamto:
-        res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-        assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-      if not learnthendestroy or movehamto:
-        pastuids.append(u)
-  if expunge or movehamto:
-    imap.expunge()
 
 
 if not teachonly:
