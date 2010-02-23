@@ -1,7 +1,14 @@
-0.99 (20091215)
-===============
-  * Bug fix: SSL now work.
+0.99 
+====
+  + 20100223
+  * Learn spam/ham before scanning
+  * Call IMAP SEARCH command instead of fetching and checking manually
+
+  + 20100219
   * deletehighterthen, fix expunge, remember ham, movehamto (thank to AJenbo!)
+
+  + 20091215
+  * Bug fix: SSL now work.
   * One more attempt when reading fail
 
 0.98 (20091201)
