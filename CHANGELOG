@@ -3,6 +3,8 @@
   + 20100223
   * Learn spam/ham before scanning
   * Call IMAP SEARCH command instead of fetching and checking manually
+  * Ignore lockfile when too old (4h by default)
+  * Switch to ignore lockfile
 
   + 20100219
   * deletehighterthen, fix expunge, remember ham, movehamto (thank to AJenbo!)
