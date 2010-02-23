@@ -51,6 +51,7 @@ thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
 lockfile=None
 lockfilename=None
+ignorelockfile=0
 passwordfilename=None # where the password is stored if requested
 savepw=0              # save the password
 alreadylearnt="Message was already un/learned"
@@ -133,6 +134,7 @@ All options are optional
   --spamc               Use spamc instead of standalone SpamAssassin binary
   --savepw              Store the password to be used in future runs
   --noninteractive      Prevent interactive requests
+  --ignorelockfile      Don't stop is lock file is present
   --nostats             Don't print stats
   --exitcodes           Use different exitcodes (see doc)
 (Your inbox will remain untouched unless you specify --flag or --delete)
@@ -178,6 +180,7 @@ longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
        "expunge", "verbose", "trackfile=", "spamc", "ssl", "savepw",
        "nostats", "exitcodes", "learnhambox=", "movehamto=",
        "learnspambox=", "teachonly", "learnthendestroy", "noninteractive",
+       "ignorelockfile",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
        "help", "version", "imapport=", "passwordfilename="
@@ -244,6 +247,8 @@ for p in opts:
         pastuidsfile=p[1]
     elif p[0]=="--lockfilename":
         lockfilename=p[1]
+    elif p[0]=="--ignorelockfile":
+        ignorelockfile=1
     else:
         locals()[p[0][2:]]=p[1]
 
@@ -314,14 +319,18 @@ if verbose:
     print "Password file is", passwordfilename
  
 # Acquirelockfilename or exit
-if os.path.exists(lockfilename):
+if ignorelockfile:
   if verbose:
-    print "\nLock file is present. Guessing isbg is already running. Exit."
-  exit(exitcodelocked)
+    print "Lock file is ignored. Continue."
 else:
-  lockfile = open(lockfilename, 'w')
-  lockfile.write(`os.getpid()`)
-  lockfile.close()
+  if os.path.exists(lockfilename):
+    if verbose:
+      print "\nLock file is present. Guessing isbg is already running. Exit."
+    exit(exitcodelocked)
+  else:
+    lockfile = open(lockfilename, 'w')
+    lockfile.write(`os.getpid()`)
+    lockfile.close()
 
 # Figure out the password
 if imappassword is None:
