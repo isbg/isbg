@@ -582,12 +582,12 @@ del imap
 
 
 if stats:
-  if not teachonly:
-    print "%d spams found in %d messages" % (numspam, nummsg)
   if learnspambox:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
   if learnhambox:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
+  if not teachonly:
+    print "%d spams found in %d messages" % (numspam, nummsg)
     
 if exitcodes and nummsg:
     res=0
