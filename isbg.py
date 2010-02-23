@@ -439,7 +439,6 @@ if learnhambox:
   h_learnt = 0
   typ, uids = imap.uid("SEARCH", None, "ALL")
   uids = uids[0].split()
-  uids = getuids(imap, 1, h_tolearn)
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
