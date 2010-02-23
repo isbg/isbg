@@ -23,6 +23,7 @@ import getpass
 import getopt
 import string
 import socket
+import time
 
 try:
   from hashlib import md5
@@ -52,6 +53,7 @@ pastuidsfile=None
 lockfile=None
 lockfilename=None
 ignorelockfile=0
+lockfilegraceminutes=240 
 passwordfilename=None # where the password is stored if requested
 savepw=0              # save the password
 alreadylearnt="Message was already un/learned"
@@ -183,7 +185,7 @@ longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
        "ignorelockfile",
        # options not mentioned in usage
        "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
-       "help", "version", "imapport=", "passwordfilename="
+       "help", "version", "imapport=", "passwordfilename=", "lockfilegraceminutes="
        ]
 
 try:
@@ -249,6 +251,8 @@ for p in opts:
         lockfilename=p[1]
     elif p[0]=="--ignorelockfile":
         ignorelockfile=1
+    elif p[0]=="--lockfilegraceminutes":
+        lockfilegraceminutes = int(p[1])
     else:
         locals()[p[0][2:]]=p[1]
 
@@ -323,7 +327,7 @@ if ignorelockfile:
   if verbose:
     print "Lock file is ignored. Continue."
 else:
-  if os.path.exists(lockfilename):
+  if os.path.exists(lockfilename) and (os.path.getmtime(lockfilename) + (lockfilegraceminutes * 60) > time.time()):
     if verbose:
       print "\nLock file is present. Guessing isbg is already running. Exit."
     exit(exitcodelocked)
