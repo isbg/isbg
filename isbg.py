@@ -271,7 +271,6 @@ if pastuidsfile is None:
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
-    m.update(imapinbox)
     res=hexof(m.digest())
     pastuidsfile=pastuidsfile+res
 
