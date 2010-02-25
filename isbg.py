@@ -436,6 +436,8 @@ if learnspambox:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
+      if p.returncode == 69:
+        errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: s_learnt += 1
       if verbose: print u, out
@@ -457,6 +459,8 @@ if learnhambox:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
+      if p.returncode == 69:
+        errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
       if verbose: print u, out
@@ -499,9 +503,8 @@ for u in inboxuids:
     # Feed it to SpamAssassin in test mode
     p=Popen(satest, stdin=PIPE, stdout=PIPE, close_fds=True)
     score = p.communicate(body)[0]
-    if score == "0/0":
-      sys.stderr.write("spamc -> spamd error - aborting")
-      sys.exit(exitcodespamc)
+    if score == "0/0\n":
+      errorexit("spamc -> spamd error - aborting")
 
     if verbose: print u, "score:", score
 
