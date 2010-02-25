@@ -436,7 +436,8 @@ if learnspambox:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
-      if p.returncode == 69:
+      code = p.returncode
+      if code == 69 or code == 74:
         errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: s_learnt += 1
@@ -459,7 +460,8 @@ if learnhambox:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
       out = p.communicate(body)[0]
-      if p.returncode == 69:
+      code = p.returncode
+      if code == 69 or code == 74:
         errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
