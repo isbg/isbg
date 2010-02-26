@@ -143,11 +143,11 @@ All options are optional
 See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
     sys.exit(ec)
 
-def errorexit(msg):
+def errorexit(msg, exitcode=exitcodeflags):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
     os.remove(lockfilename)
-    sys.exit(exitcodeflags)
+    sys.exit(exitcode)
 
 def addspamflag(flag):
     global spamflags
@@ -349,8 +349,7 @@ if imappassword is None:
     # do we have to prompt?
     if imappassword is None:
         if not interactive:
-          print "You need to specify your imap password and save it with the --savepw switch"
-          sys.exit(exitcodeok)
+          errorexit("You need to specify your imap password and save it with the --savepw switch", exitcodeok)
         imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
 
     # Should we save it?
@@ -409,9 +408,7 @@ def assertok(res,*args):
     if verbose:
         print `args`, "=", res
     if res[0]!="OK":
-        os.remove(lockfilename)
-        sys.stderr.write("\n%s returned %s - aborting\n" % (`args`, res ))
-        sys.exit(exitcodeimap)
+        errorexit("\n%s returned %s - aborting\n" % (`args`, res ), exitcodeimap)
 
 # Main code starts here
 if usessl:
@@ -594,7 +591,10 @@ if stats:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
   if not teachonly:
     print "%d spams found in %d messages" % (numspam, nummsg)
-    
+
+#every thing is done, remove lock file
+os.remove(lockfilename)
+
 if exitcodes and nummsg:
     res=0
     if numspam==0:
@@ -603,5 +603,4 @@ if exitcodes and nummsg:
         sys.exit(exitcodenewspam)
     sys.exit(exitcodenewmsgspam)
 
-os.remove(lockfilename)
 sys.exit(exitcodeok)
