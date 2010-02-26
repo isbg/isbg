@@ -432,7 +432,10 @@ if learnspambox:
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
+      try:
+        out = p.communicate(body)[0]
+      except:
+        continue
       code = p.returncode
       if code == 69 or code == 74:
         errorexit("spamd is missconfigured (use --allow-tell)")
@@ -456,7 +459,10 @@ if learnhambox:
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
+      try:
+        out = p.communicate(body)[0]
+      except:
+        continue
       code = p.returncode
       if code == 69 or code == 74:
         errorexit("spamd is missconfigured (use --allow-tell)")
@@ -501,7 +507,10 @@ for u in inboxuids:
 
     # Feed it to SpamAssassin in test mode
     p=Popen(satest, stdin=PIPE, stdout=PIPE, close_fds=True)
-    score = p.communicate(body)[0]
+    try:
+      score = p.communicate(body)[0]
+    except:
+      continue
     if score == "0/0\n":
       errorexit("spamc -> spamd error - aborting")
 
@@ -523,7 +532,10 @@ for u in inboxuids:
         if increport:
             # filter it through sa
             p = Popen(sasave, stdin = PIPE, stdout = PIPE, close_fds=True)
-            body = p.communicate(body)[0]
+            try:
+              body = p.communicate(body)[0]
+            except:
+              continue
             p.stdin.close()
             body=crnlify(body)
             res=imap.append(spaminbox, None, None, body)
