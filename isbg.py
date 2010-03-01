@@ -361,19 +361,6 @@ if imappassword is None:
         f.write(hexof(setpw(imappassword, passwordhash)))
         f.close()
 
-# pastuids keeps track of which uids we have already seen, so
-# that we don't analyze them multiple times. We store its
-# contents between sessions by saving into a file as Python
-# code (makes loading it here real easy since we just source
-# the file)
-pastuids=[]
-try:
-    execfile(pastuidsfile)
-except:
-    pass
-# remember what pastuids looked like so that we can compare at the end
-origpastuids=pastuids[:]
-
 # Retrieve the entire message
 def getmessage(uid, append_to=None):
     res = imap.uid("FETCH", uid, "(RFC822)")
@@ -491,6 +478,19 @@ if not teachonly:
   # get the uids of all mails with a size less then the thresholdsize
   typ, inboxuids = imap.uid("SEARCH", None, "SMALLER", thresholdsize)
   inboxuids = inboxuids[0].split()
+
+  # pastuids keeps track of which uids we have already seen, so
+  # that we don't analyze them multiple times. We store its
+  # contents between sessions by saving into a file as Python
+  # code (makes loading it here real easy since we just source
+  # the file)
+  pastuids=[]
+  try:
+    execfile(pastuidsfile)
+  except:
+    pass
+  # remember what pastuids looked like so that we can compare at the end
+  origpastuids=pastuids[:]
   
   # filter away uids that was previously scanned
   uids = [u for u in inboxuids if u not in pastuids]
