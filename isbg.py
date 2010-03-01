@@ -494,14 +494,15 @@ if not teachonly:
   # get the uids of all mails with a size less then the thresholdsize
   typ, inboxuids = imap.uid("SEARCH", None, "SMALLER", thresholdsize)
   inboxuids = inboxuids[0].split()
+  
+  # filter away uids from pastuids
+  uids = [u for u in inboxuids if u not in pastuids]
 
 # Keep track of new spam uids
 spamlist=[]
 
 # Main loop that iterates over each new uid we haven't seen before
-for u in inboxuids:
-    # Double check
-    if u in pastuids: continue
+for u in uids:
     # Retrieve the entire message
     body = getmessage(u, pastuids)
 
@@ -512,7 +513,7 @@ for u in inboxuids:
     except:
       continue
     if score == "0/0\n":
-      errorexit("spamc -> spamd error - aborting")
+      errorexit("spamc -> spamd error - aborting", exitcodespamc)
 
     if verbose: print u, "score:", score
 
@@ -555,7 +556,7 @@ for u in inboxuids:
 if deletehigherthen:
   imap.expunge()
 
-nummsg=len(inboxuids)
+nummsg=len(uids)
 numspam=len(spamlist)
 
 # If we found any spams, now go and mark the original messages
@@ -574,10 +575,7 @@ if numspam:
 
 if not teachonly:
   # Now tidy up lists of uids
-  newpastuids=[]
-  for i in pastuids:
-      if i in inboxuids and i not in newpastuids:
-          newpastuids.append(i)
+  newpastuids = list(set([u for u in pastuids if u in inboxuids]))
 
   # only write out pastuids if it has changed
   if newpastuids!=origpastuids:
