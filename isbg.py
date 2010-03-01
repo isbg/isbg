@@ -564,6 +564,8 @@ numspam=len(spamlist)
 
 # If we found any spams, now go and mark the original messages
 if numspam:
+    res=imap.select(imapinbox)
+    assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
     if len(spamflags)>2:
         for u in spamlist:
