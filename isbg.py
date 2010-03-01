@@ -271,7 +271,6 @@ if pastuidsfile is None:
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
-    m.update(imapinbox)
     res=hexof(m.digest())
     pastuidsfile=pastuidsfile+res
 
@@ -475,12 +474,10 @@ if learnhambox:
       if learnthendestroy or movehamto:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-      if not learnthendestroy or movehamto:
-        pastuids.append(u)
   if expunge or movehamto:
     imap.expunge()
 
-inboxuids=[]
+uids=[]
 
 if not teachonly:
   # check spaminbox exists by examining it
@@ -495,11 +492,14 @@ if not teachonly:
   typ, inboxuids = imap.uid("SEARCH", None, "SMALLER", thresholdsize)
   inboxuids = inboxuids[0].split()
   
-  # filter away uids from pastuids
+  # filter away uids that was previously scanned
   uids = [u for u in inboxuids if u not in pastuids]
 
 # Keep track of new spam uids
 spamlist=[]
+
+# number deleted by deletehigherthen
+spamdeleted=0
 
 # Main loop that iterates over each new uid we haven't seen before
 for u in uids:
@@ -525,10 +525,6 @@ for u in uids:
         # Message is spam
         if verbose: print u, "is spam"
         
-        if deletehigherthen and float(score) > deletehigherthen:
-          res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-          assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-
         # do we want to include the spam report
         if increport:
             # filter it through sa
@@ -546,7 +542,14 @@ for u in uids:
                 print `["append", spaminbox, "{body}"]`, "failed for uid "+`u`+": "+`res`+". Leaving original message alone."
                 pastuids.append(u)
                 continue
-        else:
+
+        if deletehigherthen and float(score.split('/')[0]) > deletehigherthen:
+          res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+          assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+          spamdeleted += 1
+          continue
+
+        if not increport:
             # just copy it as is
             res=imap.uid("COPY", u, spaminbox)
             assertok(res, "uid copy", u, spaminbox)
@@ -561,8 +564,6 @@ numspam=len(spamlist)
 
 # If we found any spams, now go and mark the original messages
 if numspam:
-    res=imap.select(imapinbox)
-    assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
     if len(spamflags)>2:
         for u in spamlist:
@@ -572,6 +573,7 @@ if numspam:
     if expunge:
       imap.expunge()
 
+numspam += spamdeleted
 
 if not teachonly:
   # Now tidy up lists of uids
