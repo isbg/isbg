@@ -178,7 +178,7 @@ def dehexof(x):
 
 # argument processing
 longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
-       "maxsize=", "noreport", "flag", "delete", "deletehigherthen",
+       "maxsize=", "noreport", "flag", "delete", "deletehigherthen=",
        "expunge", "verbose", "trackfile=", "spamc", "ssl", "savepw",
        "nostats", "exitcodes", "learnhambox=", "movehamto=",
        "learnspambox=", "teachonly", "learnthendestroy", "noninteractive",
@@ -498,8 +498,8 @@ if not teachonly:
 # Keep track of new spam uids
 spamlist=[]
 
-# number deleted by deletehigherthen
-spamdeleted=0
+# Keep track of spam that is to be deleted
+spamdeletelist=[]
 
 # Main loop that iterates over each new uid we haven't seen before
 for u in uids:
@@ -524,6 +524,10 @@ for u in uids:
     else:
         # Message is spam
         if verbose: print u, "is spam"
+
+        if deletehigherthen and float(score.split('/')[0]) > deletehigherthen:
+          spamdeletelist.append(u)
+          continue
         
         # do we want to include the spam report
         if increport:
@@ -542,28 +546,20 @@ for u in uids:
                 print `["append", spaminbox, "{body}"]`, "failed for uid "+`u`+": "+`res`+". Leaving original message alone."
                 pastuids.append(u)
                 continue
-
-        if deletehigherthen and float(score.split('/')[0]) > deletehigherthen:
-          res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-          assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-          spamdeleted += 1
-          continue
-
-        if not increport:
+        else:
             # just copy it as is
             res=imap.uid("COPY", u, spaminbox)
             assertok(res, "uid copy", u, spaminbox)
 
         spamlist.append(u)
 
-if deletehigherthen:
-  imap.expunge()
 
 nummsg=len(uids)
-numspam=len(spamlist)
+spamdeleted=len(spamdeletelist)
+numspam=len(spamlist)+spamdeleted
 
 # If we found any spams, now go and mark the original messages
-if numspam:
+if numspam or spamdeleted:
     res=imap.select(imapinbox)
     assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
@@ -572,10 +568,12 @@ if numspam:
             res=imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
             pastuids.append(u)
+    # Set flag spam with high score as deleted
+    for u in spamdeletelist:
+      res=imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+      assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
     if expunge:
       imap.expunge()
-
-numspam += spamdeleted
 
 if not teachonly:
   # Now tidy up lists of uids
@@ -605,6 +603,8 @@ if stats:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
   if not teachonly:
     print "%d spams found in %d messages" % (numspam, nummsg)
+  if not teachonly:
+    print "%d/%d was automaticaly deleted" % (spamdeleted, numspam)
 
 #every thing is done, remove lock file
 os.remove(lockfilename)
