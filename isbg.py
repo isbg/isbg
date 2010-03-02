@@ -24,6 +24,7 @@ import getopt
 import string
 import socket
 import time
+import atexit
 
 try:
   from hashlib import md5
@@ -146,7 +147,6 @@ See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, 
 def errorexit(msg, exitcode=exitcodeflags):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
-    os.remove(lockfilename)
     sys.exit(exitcode)
 
 def addspamflag(flag):
@@ -276,6 +276,12 @@ if pastuidsfile is None:
 
 if lockfilename is None:
     lockfilename=os.path.expanduser("~"+os.sep+".isbg-lock")
+
+# Delete lock file
+def removelock():
+  os.remove(lockfilename)
+
+atexit.register(removelock)
 
 # Password stuff
 def getpw(data,hash):
@@ -605,9 +611,6 @@ if stats:
     print "%d spams found in %d messages" % (numspam, nummsg)
   if not teachonly:
     print "%d/%d was automaticaly deleted" % (spamdeleted, numspam)
-
-#every thing is done, remove lock file
-os.remove(lockfilename)
 
 if exitcodes and nummsg:
     res=0
