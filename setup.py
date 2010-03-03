@@ -16,7 +16,7 @@ setup(
 	author_email='thomas@lecavelier.name',
 	license='See LICENCE file.',
 	scripts=['isbg.py'],
-	url='http://redmine.ookook.fr/projects/isbg',
+  url='http://redmine.ookook.fr/projects/isbg/wiki',
 	classifiers=[
 		'Development Status :: 5 - Production/Stable',
 		'Environment :: Console',
