@@ -519,7 +519,7 @@ for u in uids:
     try:
       score = p.communicate(body)[0]
       if not spamc:
-        m = re.search("score=(\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)", score)
+        m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)", score)
         score = m.group(1) + "/" + m.group(2) + "\n"
     except:
       continue
