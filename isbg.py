@@ -24,6 +24,7 @@ import getopt
 import string
 import socket
 import time
+import atexit
 
 try:
   from hashlib import md5
@@ -143,11 +144,10 @@ All options are optional
 See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
     sys.exit(ec)
 
-def errorexit(msg):
+def errorexit(msg, exitcode=exitcodeflags):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
-    os.remove(lockfilename)
-    sys.exit(exitcodeflags)
+    sys.exit(exitcode)
 
 def addspamflag(flag):
     global spamflags
@@ -178,7 +178,7 @@ def dehexof(x):
 
 # argument processing
 longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
-       "maxsize=", "noreport", "flag", "delete", "deletehigherthen",
+       "maxsize=", "noreport", "flag", "delete", "deletehigherthen=",
        "expunge", "verbose", "trackfile=", "spamc", "ssl", "savepw",
        "nostats", "exitcodes", "learnhambox=", "movehamto=",
        "learnspambox=", "teachonly", "learnthendestroy", "noninteractive",
@@ -277,6 +277,12 @@ if pastuidsfile is None:
 if lockfilename is None:
     lockfilename=os.path.expanduser("~"+os.sep+".isbg-lock")
 
+# Delete lock file
+def removelock():
+  os.remove(lockfilename)
+
+atexit.register(removelock)
+
 # Password stuff
 def getpw(data,hash):
     res=""
@@ -348,8 +354,7 @@ if imappassword is None:
     # do we have to prompt?
     if imappassword is None:
         if not interactive:
-          print "You need to specify your imap password and save it with the --savepw switch"
-          sys.exit(exitcodeok)
+          errorexit("You need to specify your imap password and save it with the --savepw switch", exitcodeok)
         imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
 
     # Should we save it?
@@ -361,19 +366,6 @@ if imappassword is None:
             pass
         f.write(hexof(setpw(imappassword, passwordhash)))
         f.close()
-
-# pastuids keeps track of which uids we have already seen, so
-# that we don't analyze them multiple times. We store its
-# contents between sessions by saving into a file as Python
-# code (makes loading it here real easy since we just source
-# the file)
-pastuids=[]
-try:
-    execfile(pastuidsfile)
-except:
-    pass
-# remember what pastuids looked like so that we can compare at the end
-origpastuids=pastuids[:]
 
 # Retrieve the entire message
 def getmessage(uid, append_to=None):
@@ -408,9 +400,7 @@ def assertok(res,*args):
     if verbose:
         print `args`, "=", res
     if res[0]!="OK":
-        os.remove(lockfilename)
-        sys.stderr.write("\n%s returned %s - aborting\n" % (`args`, res ))
-        sys.exit(exitcodeimap)
+        errorexit("\n%s returned %s - aborting\n" % (`args`, res ), exitcodeimap)
 
 # Main code starts here
 if usessl:
@@ -434,7 +424,13 @@ if learnspambox:
   for u in uids:
       body = getmessage(u)
       p=Popen(["spamc", "--learntype=spam"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
+      try:
+        out = p.communicate(body)[0]
+      except:
+        continue
+      code = p.returncode
+      if code == 69 or code == 74:
+        errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: s_learnt += 1
       if verbose: print u, out
@@ -454,8 +450,14 @@ if learnhambox:
   uids = uids[0].split()
   for u in uids:
       body = getmessage(u)
-      p=Popen(["spamc", "--learntype=ham", "--max-size=15728640"], stdin = PIPE, stdout = PIPE, close_fds = True)
-      out = p.communicate(body)[0]
+      p=Popen(["spamc", "--learntype=ham"], stdin = PIPE, stdout = PIPE, close_fds = True)
+      try:
+        out = p.communicate(body)[0]
+      except:
+        continue
+      code = p.returncode
+      if code == 69 or code == 74:
+        errorexit("spamd is missconfigured (use --allow-tell)")
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
       if verbose: print u, out
@@ -465,12 +467,10 @@ if learnhambox:
       if learnthendestroy or movehamto:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-      if not learnthendestroy or movehamto:
-        pastuids.append(u)
   if expunge or movehamto:
     imap.expunge()
 
-inboxuids=[]
+uids=[]
 
 if not teachonly:
   # check spaminbox exists by examining it
@@ -485,22 +485,41 @@ if not teachonly:
   typ, inboxuids = imap.uid("SEARCH", None, "SMALLER", thresholdsize)
   inboxuids = inboxuids[0].split()
 
+  # pastuids keeps track of which uids we have already seen, so
+  # that we don't analyze them multiple times. We store its
+  # contents between sessions by saving into a file as Python
+  # code (makes loading it here real easy since we just source
+  # the file)
+  pastuids=[]
+  try:
+    execfile(pastuidsfile)
+  except:
+    pass
+  # remember what pastuids looked like so that we can compare at the end
+  origpastuids=pastuids[:]
+  
+  # filter away uids that was previously scanned
+  uids = [u for u in inboxuids if u not in pastuids]
+
 # Keep track of new spam uids
 spamlist=[]
 
+# Keep track of spam that is to be deleted
+spamdeletelist=[]
+
 # Main loop that iterates over each new uid we haven't seen before
-for u in inboxuids:
-    # Double check
-    if u in pastuids: continue
+for u in uids:
     # Retrieve the entire message
     body = getmessage(u, pastuids)
 
     # Feed it to SpamAssassin in test mode
     p=Popen(satest, stdin=PIPE, stdout=PIPE, close_fds=True)
-    score = p.communicate(body)[0]
-    if score == "0/0":
-      sys.stderr.write("spamc -> spamd error - aborting")
-      sys.exit(exitcodespamc)
+    try:
+      score = p.communicate(body)[0]
+    except:
+      continue
+    if score == "0/0\n":
+      errorexit("spamc -> spamd error - aborting", exitcodespamc)
 
     if verbose: print u, "score:", score
 
@@ -511,16 +530,19 @@ for u in inboxuids:
     else:
         # Message is spam
         if verbose: print u, "is spam"
-        
-        if deletehigherthen and float(score) > deletehigherthen:
-          res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-          assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
 
+        if deletehigherthen and float(score.split('/')[0]) > deletehigherthen:
+          spamdeletelist.append(u)
+          continue
+        
         # do we want to include the spam report
         if increport:
             # filter it through sa
             p = Popen(sasave, stdin = PIPE, stdout = PIPE, close_fds=True)
-            body = p.communicate(body)[0]
+            try:
+              body = p.communicate(body)[0]
+            except:
+              continue
             p.stdin.close()
             body=crnlify(body)
             res=imap.append(spaminbox, None, None, body)
@@ -537,14 +559,13 @@ for u in inboxuids:
 
         spamlist.append(u)
 
-if deletehigherthen:
-  imap.expunge()
 
-nummsg=len(inboxuids)
-numspam=len(spamlist)
+nummsg=len(uids)
+spamdeleted=len(spamdeletelist)
+numspam=len(spamlist)+spamdeleted
 
 # If we found any spams, now go and mark the original messages
-if numspam:
+if numspam or spamdeleted:
     res=imap.select(imapinbox)
     assertok(res, 'select', imapinbox)
     # Only set message flags if there are any
@@ -553,16 +574,16 @@ if numspam:
             res=imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
             pastuids.append(u)
+    # Set flag spam with high score as deleted
+    for u in spamdeletelist:
+      res=imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+      assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
     if expunge:
       imap.expunge()
 
-
 if not teachonly:
   # Now tidy up lists of uids
-  newpastuids=[]
-  for i in pastuids:
-      if i in inboxuids and i not in newpastuids:
-          newpastuids.append(i)
+  newpastuids = list(set([u for u in pastuids if u in inboxuids]))
 
   # only write out pastuids if it has changed
   if newpastuids!=origpastuids:
@@ -582,13 +603,15 @@ del imap
 
 
 if stats:
-  if not teachonly:
-    print "%d spams found in %d messages" % (numspam, nummsg)
   if learnspambox:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
   if learnhambox:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
-    
+  if not teachonly:
+    print "%d spams found in %d messages" % (numspam, nummsg)
+  if not teachonly:
+    print "%d/%d was automaticaly deleted" % (spamdeleted, numspam)
+
 if exitcodes and nummsg:
     res=0
     if numspam==0:
@@ -597,5 +620,4 @@ if exitcodes and nummsg:
         sys.exit(exitcodenewspam)
     sys.exit(exitcodenewmsgspam)
 
-os.remove(lockfilename)
 sys.exit(exitcodeok)
