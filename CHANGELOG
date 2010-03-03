@@ -1,7 +1,7 @@
 0.99 (20100303)
 ====
   * Drastic speed enhancement (thanks to Ajenbo!)
-  * deletehighterthen, fix expunge, remember ham, movehamto (thanks to AJenbo!)
+  * deletehighterthen, fix expunge, movehamto (thanks to AJenbo!)
   * Learn spam/ham before scanning
   * Call IMAP SEARCH command instead of fetching and checking manually
   * Ignore lockfile when too old (4h by default)
