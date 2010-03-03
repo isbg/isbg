@@ -579,7 +579,7 @@ if numspam or spamdeleted:
             res=imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
             pastuids.append(u)
-    # Set flag spam with high score as deleted
+    # Set deleted flag for spam with high score
     for u in spamdeletelist:
       res=imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
       assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
@@ -614,7 +614,6 @@ if stats:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
   if not teachonly:
     print "%d spams found in %d messages" % (numspam, nummsg)
-  if not teachonly:
     print "%d/%d was automaticaly deleted" % (spamdeleted, numspam)
 
 if exitcodes and nummsg:
