@@ -1,17 +1,13 @@
-0.99 
+0.99 (20100303)
 ====
-  + 20100223
+  * Drastic speed enhancement (thanks to Ajenbo!)
+  * deletehighterthen, fix expunge, remember ham, movehamto (thanks to AJenbo!)
   * Learn spam/ham before scanning
   * Call IMAP SEARCH command instead of fetching and checking manually
   * Ignore lockfile when too old (4h by default)
   * Switch to ignore lockfile
-
-  + 20100219
-  * deletehighterthen, fix expunge, remember ham, movehamto (thank to AJenbo!)
-
-  + 20091215
   * Bug fix: SSL now work.
-  * One more attempt when reading fail
+  * Don't crash anymore when parsing weird attachement (like MS Office files)
 
 0.98 (20091201)
 ===============
