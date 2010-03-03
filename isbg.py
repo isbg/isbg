@@ -55,6 +55,7 @@ lockfile=None
 lockfilename=None
 ignorelockfile=0
 lockfilegraceminutes=240 
+spamc=False
 passwordfilename=None # where the password is stored if requested
 savepw=0              # save the password
 alreadylearnt="Message was already un/learned"
@@ -222,6 +223,7 @@ for p in opts:
     elif p[0]=="--delete":
         addspamflag("\\Deleted")
     elif p[0]=="--spamc":
+        spamc=True
         satest=["spamc", "-c"]
         sasave=["spamc"]
     elif p[0]=="--expunge":
@@ -516,6 +518,9 @@ for u in uids:
     p=Popen(satest, stdin=PIPE, stdout=PIPE, close_fds=True)
     try:
       score = p.communicate(body)[0]
+      if not spamc:
+        m = re.search("score=(\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)", score)
+        score = m.group(1) + "/" + m.group(2) + "\n"
     except:
       continue
     if score == "0/0\n":
