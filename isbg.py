@@ -114,7 +114,8 @@ def usage(ec):
         sslmsg="""
   --ssl                 Make an SSL connection to the IMAP server"""
     sys.stderr.write("""isbg: IMAP Spam begone %s
-All options are optional
+
+All options are optional (\o/), default are between brackets
 
   --imaphost hostname   IMAP server name [%s]%s
   --imapuser username   Who you login as [%s]
@@ -141,8 +142,10 @@ All options are optional
   --ignorelockfile      Don't stop is lock file is present
   --nostats             Don't print stats
   --exitcodes           Use different exitcodes (see doc)
+
 (Your inbox will remain untouched unless you specify --flag or --delete)
-See http://wiki.github.com/ook/isbg for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
+
+See http://redmine.ookook.fr/projects/isbg/wiki for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
     sys.exit(ec)
 
 def errorexit(msg, exitcode=exitcodeflags):
