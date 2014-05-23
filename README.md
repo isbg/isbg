@@ -57,11 +57,6 @@ leave it.
 *   Remember mails teached as Spam and Ham
 *   Automatically delete mail with very high spam score
 
-# Bugs<a name="Bugs"></a>
-
-Well, it's a bug tracker, you know. So have a look to the [bug list [broken link]](http://redmine.ookook.fr/projects/isbg/issues?query_id=1)
-
-You can request or discuss feature there, too.
 
 # Does it work?<a name="Does-it-work"></a>
 
@@ -303,9 +298,3 @@ With the great help of Anders Jenbo since v0.99.
 As said by Roger Binns when he hang over isbg to Thomas Lecavelier: 
  " You may use isbg under any OSI approved open source license such as 
 those listed at [http://opensource.org/licenses/alphabetical](http://opensource.org/licenses/alphabetical) "
-
-There is a Yahoo group - [imapspambegone](http://tech.groups.yahoo.com/group/imapspambegone/) for discussion and questions.
-
-</div>
-
-</body></html>
