@@ -163,7 +163,8 @@ $ isbg.py --help
     --imapuser username   Who you login as [rogerb]
     --imapinbox mbox      Name of your inbox folder [INBOX]
     --spaminbox mbox      Name of your spam folder [INBOX.spam]
-    --maxsize numbytes    Messages larger than this will be ignored as they are                           unlikely to be spam [120000]
+    --maxsize numbytes    Messages larger than this will be ignored as they are
+                          unlikely to be spam [120000]
     --noreport            Don't include the SpamAssassin report in the message
                           copied to your spam folder
     --flag                The spams will be flagged in your inbox
@@ -223,7 +224,7 @@ is Courier, then your folders are all below INBOX, and use dots to
 seperate the components.
 
 The UWash server typically has the folders below Mail and uses
-slash `/` to seperate components.
+slash (`/`) to seperate components.
 
 # Advanced options<a name="Advanced-options"></a>
 
