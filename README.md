@@ -1,6 +1,7 @@
 # IMAP Spam Begone
 
-isbg is a script that makes it easy to scan an IMAP inbox for spam using SpamAssassin and get your spam moved to another folder.
+isbg is a script that makes it easy to scan an IMAP inbox for spam using
+SpamAssassin and get your spam moved to another folder.
 
 Unlike the normal mode of deployments for SpamAssassin, isbg does 
 not need to be involved in mail delivery, and can run on completely 
@@ -33,20 +34,22 @@ leave it.
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
-# Features<a name="Features"></a>
+# Features
 
 *   Works with all common IMAP servers
 *   Works on Linux, MacOS X and Windows (even smartphones!)
 *   Can do IMAP over SSL
 *   Can remember your password
 *   Will work painlessly against multiple IMAP accounts and servers
-*   Is not involved in the mail delivery process, and so can run on any machine that can contact your IMAP server
+*   Is not involved in the mail delivery process, and so can run
+    on any machine that can contact your IMAP server
 *   Highly configurable
 *   Sensible defaults so you don't have to do any configuring :-)
 *   Compatibility with Python 2.4, 2.5, 2.6
 *   Possibility to skip spam detection to stick only to the teach feature
 *   Don't fail when meeting horrible and bad formed mail
-*   Lock file to prevent multiple instance to run at the same time (for cron jobs)
+*   Lock file to prevent multiple instance to run at the same time
+    (for cron jobs)
 
 ## New in 0.99<a name="New-in-099"></a>
 
