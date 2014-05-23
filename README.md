@@ -14,6 +14,8 @@ leave it.
 *   [Bugs](#Bugs)
 *   [Does it work?](#Does-it-work)
 *   [Installation](#Installation)
+*   [Install from source](#Install-from-source)
+*   [Install in Debian](#Install-in-Debian)
 *   [Your first run](#Your-first-run)
 *   [SpamAssassin](#SpamAssassin)
 *   [Configure your spamassassin](#Configure-your-spamassassin)
@@ -72,8 +74,10 @@ There are no known outstanding bugs.
 
 # Installation<a name="Installation"></a>
 
+## Install from source<a name="Install-from-source"></a>
+
 Make sure you have SpamAssassin installed. All the necessary information
-should be found on the 
+can be found on the 
 [SpamAssassin wiki](https://wiki.apache.org/spamassassin/FrontPage).
 
 SpamAssassin should be on your $PATH (it installs in `/usr/bin/` by default)
@@ -84,6 +88,11 @@ it executable (`chmod 555 isbg.py`). It is written in the Python scripting
  can find out more about Python at [www.python.org](http://www.python.org/)
 
 Simply invoke it by whatever name you called the file.
+
+## Install in Debian<a name="Install-in-Debian"></a>
+
+There is a package in mentor.debian.net pending approval from the community.
+There should thus be a packaged version soon.
 
 # Your first run<a name="Your-first-run"></a>
 
@@ -101,6 +110,8 @@ Created user preferences file: /home/rogerb/.spamassassin/user_prefs
 
 You can then edit `$HOME/.spamassassin/user_prefs` and change the thresholds.
 
+You can also edit the system-wide settings in `/etc/spamassassin/locals.cf`.
+
 If you want to use the `--learnspambox` or `--learnhambox`, you'll have
  to configure your spamassassin.
 
@@ -113,7 +124,7 @@ you have to add this configuration:
 
 You have to start `spamd` with the `--allow-tell` option.
 
-On debian systems (debian and ubuntu), you have to edit
+On Debian systems (Debian and Ubuntu), you have to edit
  `/etc/default/spamassassin` and replace:
 
 <pre>
@@ -127,7 +138,7 @@ OPTIONS="-D --allow-tell --create-prefs --max-children 5 --helper-home-dir"
 </pre>
 
 Don't forget to restart you're spamd server after that
- (`sudo service spamassassin restart` on debian).
+ (`sudo service spamassassin restart` on Debian).
 
 
 ## isbg<a name="isbg"></a>
@@ -142,7 +153,8 @@ Your first step is to create a new folder to receive suspected spam.
 Run isbg with the `--help` option to see what options are available:
 
 <pre>
-    $ isbg.py --help
+$ isbg.py --help
+
     isbg: IMAP Spam begone 0.97-26Mar03
     All options are optional
 
@@ -151,14 +163,13 @@ Run isbg with the `--help` option to see what options are available:
     --imapuser username   Who you login as [rogerb]
     --imapinbox mbox      Name of your inbox folder [INBOX]
     --spaminbox mbox      Name of your spam folder [INBOX.spam]
-    --maxsize numbytes    Messages larger than this will be ignored as they are
-                                unlikely to be spam [120000]
+    --maxsize numbytes    Messages larger than this will be ignored as they are                           unlikely to be spam [120000]
     --noreport            Don't include the SpamAssassin report in the message
-                                copied to your spam folder
+                          copied to your spam folder
     --flag                The spams will be flagged in your inbox
     --delete              The spams will be marked for deletion from your inbox
     --expunge             Cause marked for deletion messages to also be deleted
-                                (only useful if --delete is specified)
+                          (only useful if --delete is specified)
     --verbose             Show IMAP stuff happening
     --spamc               Use spamc instead of standalone SpamAssassin binary
     --savepw              Store the password to be used in future runs
@@ -172,7 +183,7 @@ Run isbg with the `--help` option to see what options are available:
 
 <pre>
 $ isbg.py --imaphost mail.example.com  --savepw
-IMAP password for [rogerb@mail.example.com](mailto:rogerb@mail.example.com):
+IMAP password for rogerb@mail.example.com:
 </pre>
 
 The amount of time it takes will be proportional to the size of your
@@ -180,28 +191,28 @@ The amount of time it takes will be proportional to the size of your
  what is going on.
 
 You can now examine your spam folder and will see what spam was 
-detected. You can change the SpamAssassin threshold in your user_prefs 
+detected. You can change the SpamAssassin threshold in your `user_prefs` 
 file it created earlier.
 
 isbg remembers which messages it has already seen, so that it 
 doesn't process them again every time it is run. If you are testing and 
 do want it to run again, then remove the trackfile (default 
-$HOME/.isbg-track*).
+`$HOME/.isbg-track*`).
 
-If you specified --savepw then isbg will remember your password the 
+If you specified `--savepw` then isbg will remember your password the 
 next time you run against the same server with the same username. You 
-should not specify --savepw in future runs unless you want to change the
+should not specify `--savepw` in future runs unless you want to change the
  saved password.
 
 # Running it<a name="Running-it"></a>
 
 You'll probably want something to actually be done with the original
  spams in your inbox. By default nothing happens to them, but you have 
-two options available. If you specify --flag then spams will be flagged.
+two options available. If you specify `--flag` then spams will be flagged.
 
-You can get the messages marked for deletion by specifying --delete.
- If you never want to see them in your inbox, also specify the --expunge
- option after --delete and they will be removed when isbg logs out of 
+You can get the messages marked for deletion by specifying `--delete`.
+ If you never want to see them in your inbox, also specify the `--expunge`
+ option after `--delete` and they will be removed when isbg logs out of 
 the IMAP server.
 
 # Your folder names<a name="Your-folder-names"></a>
@@ -211,7 +222,8 @@ IMAP clients manage to hide most of this from you. If your IMAP server
 is Courier, then your folders are all below INBOX, and use dots to 
 seperate the components.
 
-The UWash server typically has the folders below Mail and uses slash '/' to seperate components.
+The UWash server typically has the folders below Mail and uses
+slash `/` to seperate components.
 
 # Advanced options<a name="Advanced-options"></a>
 
@@ -226,28 +238,28 @@ IMAP assigns each message in a folder a unique id. isbg scans the
 folder for messages it hasn't seen before, and for each one, downloads 
 the message and feeds it to SpamAssassin. If SpamAssassin says the 
 message is spam, then the SpamAssassin report is uploaded into your spam
- folder. Unless you specify the --noreport option, in which case the 
-message is copied from your Inbox to the Spam folder (the copy happens  
-   on the IMAP server itself so this option is good if you are on a low 
+ folder. Unless you specify the `--noreport` option, in which case the 
+message is copied from your Inbox to the Spam folder (the copy happens on
+ the IMAP server itself so this option is good if you are on a low 
 bandwidth connection).
 
 # Multiple accounts<a name="Multiple-accounts"></a>
 
-By default isbg saves the list of seen IMAP message unique ids in a 
-file in your home directory. It is named .isbg-trackXXXX where XXXX is a
+By default isbg saves the list of seen IMAP message unique IDs in a 
+file in your home directory. It is named `.isbg-trackXXXX` where XXXX is a
  16 byte identifier based on the IMAP host, username and port number. 
 Consequently you can just run isbg against different servers/accounts 
-and it will automatically keep the tracked uids seperate. You can 
-override the filename with --trackfile.
+and it will automatically keep the tracked UIDs seperate. You can 
+override the filename with `--trackfile`.
 
 # Saving your password<a name="Saving-your-password"></a>
 
 If you don't want isbg to prompt you for your password each time, 
-you can specify the --savepw option. This will save the password in a 
-file in your home directory. The file is named .isbg-XXXX where XXXX is a
+you can specify the `--savepw` option. This will save the password in a 
+file in your home directory. The file is named `.isbg-XXXX` where XXXX is a
  16 byte identifier based on the IMAP host, username and port number 
 (the same as for the multiple accounts description above). You can 
-override the filename with --passwordfilename
+override the filename with `--passwordfilename`.
 
 The password is obfuscated, so anyone just looking at the contents 
 won't be able to see what it is. However, if they study the code to isbg
@@ -261,8 +273,8 @@ Consequently you should regard this as providing minimal protection if someone c
 
 isbg can do IMAP over SSL if your version of Python has been 
 compiled with SSL support. (Specifically it looks for the function 
-socket.ssl). You can tell if you have ssl support by running isbg.py 
---help. If --ssl is listed in the options then you have ssl support.
+socket.ssl). You can tell if you have ssl support by running `isbg.py 
+--help`. If `--ssl` is listed in the options then you have ssl support.
 
 However you should be aware that the SSL support does NOT check the 
 certificate name nor validate the issuer. If an attacker can intercept 
@@ -274,15 +286,17 @@ have the usual security features of SSL.
 
 When ISBG exits, it uses the exit code to tell you what happened. In
  general it is zero if all went well, and non-zero if there was a 
-problem. You can turn on additional reporting by using the --exitcodes 
+problem. You can turn on additional reporting by using the `--exitcodes` 
 command line option.
+<pre>
 code  --exitcodes needed  description
-0       All went well
+0         All went well
 1   yes   There was at least one new message, and none of the messages were spam
 2   yes   There was at least one new message, and all messages were spam
 3   yes   There were new messages, with at least one spam and one non-spam
-10      There were errors in the command line arguments
-11      The IMAP server reported an error
+10        There were errors in the command line arguments
+11        The IMAP server reported an error
+</pre>
 
 # Read and Seen flags<a name="Read-and-Seen-flags"></a>
 
@@ -302,11 +316,16 @@ The IMAP specification does not permit clients to change the Recent flag.
 # Todo list<a name="Todo-list"></a>
 
 *   Auto report messages to Razor (high scoring ones that are definitely spam)
-*   Seperate out messages that may be false positives (scores close to SpamAssassin thresholds) from the definite spam ones.
+*   Seperate out messages that may be false positives (scores
+ close to SpamAssassin thresholds) from the definite spam ones.
 
 # Contact and about<a name="Contact-and-about"></a>
 
-This software was written by Roger Binns &lt;[rogerb@rogerbinns.com](mailto:rogerb@rogerbinns.com)&gt; and is maintained by Thomas Lecavelier &lt;[thomas@lecavelier.name](mailto:thomas@lecavelier.name)&gt; since november 2009.
+This software was written by Roger Binns 
+&lt;[rogerb@rogerbinns.com](mailto:rogerb@rogerbinns.com)&gt;
+ and is maintained by Thomas Lecavelier 
+&lt;[thomas@lecavelier.name](mailto:thomas@lecavelier.name)&gt;
+ since november 2009.
 With the great help of Anders Jenbo since v0.99.
 
 # License<a name="License"></a>
