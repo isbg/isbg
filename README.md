@@ -9,7 +9,6 @@ different machines to where your mailbox actually is. So this is the
 perfect tool to take good care of your ISP mailbox without having to 
 leave it.
 
-*   [IMAP Spam Begone](#IMAP-Spam-Begone)
 *   [Features](#Features)
 *   [New in 0.99](#New-in-099)
 *   [Bugs](#Bugs)
@@ -34,7 +33,7 @@ leave it.
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
-# Features
+# Features<a name="Features"></a>
 
 *   Works with all common IMAP servers
 *   Works on Linux, MacOS X and Windows (even smartphones!)
@@ -42,19 +41,20 @@ leave it.
 *   Can remember your password
 *   Will work painlessly against multiple IMAP accounts and servers
 *   Is not involved in the mail delivery process, and so can run
-    on any machine that can contact your IMAP server
+on any machine that can contact your IMAP server
 *   Highly configurable
 *   Sensible defaults so you don't have to do any configuring :-)
 *   Compatibility with Python 2.4, 2.5, 2.6
 *   Possibility to skip spam detection to stick only to the teach feature
 *   Don't fail when meeting horrible and bad formed mail
-*   Lock file to prevent multiple instance to run at the same time
-    (for cron jobs)
+*   Lock file to prevent multiple instance to run at the same time 
+(for cron jobs)
 
 ## New in 0.99<a name="New-in-099"></a>
 
 *   Drastic performance enhancement (up to 1000x speeder!)
-*   Lock file to prevent multiple instance to run at the same time (for cron jobs)
+*   Lock file to prevent multiple instance to run at the same time
+ (for cron jobs)
 *   SSL fixed
 *   Don't fail when meeting horrible and bad formed mail
 *   Remember mails teached as Spam and Ham
@@ -72,12 +72,14 @@ There are no known outstanding bugs.
 
 # Installation<a name="Installation"></a>
 
-Make sure you have SpamAssassin installed. This is described in spamassassin.org/dist/INSTALL.
+Make sure you have SpamAssassin installed. All the necessary information
+should be found on the 
+[SpamAssassin wiki](https://wiki.apache.org/spamassassin/FrontPage).
 
-SpamAssassin should be on your $PATH (it installs in /usr/bin by default)
+SpamAssassin should be on your $PATH (it installs in `/usr/bin/` by default)
 
 Download isbg.py. You can rename it to anything you want, and make 
-it executable (chmod 555 isbg.py). It is written in the Python scripting
+it executable (`chmod 555 isbg.py`). It is written in the Python scripting
  language. Python is installed by default on most Linux systems. You can
  can find out more about Python at [www.python.org](http://www.python.org/)
 
@@ -97,31 +99,36 @@ preferences file.
 Created user preferences file: /home/rogerb/.spamassassin/user_prefs
 </pre>
 
-You can then edit $HOME/.spamassassin/user_prefs and change the thresholds.
+You can then edit `$HOME/.spamassassin/user_prefs` and change the thresholds.
 
-If you want to use the --learnspambox or --learnhambox, you'll have to configure your spamassassin</a>.
+If you want to use the `--learnspambox` or `--learnhambox`, you'll have
+ to configure your spamassassin.
 
 ### Configure your spamassassin<a name="Configure-your-spamassassin"></a>
 
-If you want to use `--learnspambox` or `--learnhambox` features, you have to add this configuration:
+If you want to use `--learnspambox` or `--learnhambox` features, 
+you have to add this configuration:
 
 #### Allow Tell<a name="Allow-Tell"></a>
 
 You have to start `spamd` with the `--allow-tell` option.
 
-On debian systems (debian and ubuntu), you have to edit `/etc/default/spamassassin` and replace:
+On debian systems (debian and ubuntu), you have to edit
+ `/etc/default/spamassassin` and replace:
 
-<pre>OPTIONS="-D --create-prefs --max-children 5 --helper-home-dir" 
+<pre>
+OPTIONS="-D --create-prefs --max-children 5 --helper-home-dir" 
 </pre>
 
 by:
 
-<pre>OPTIONS="-D --allow-tell --create-prefs --max-children 5 --helper-home-dir" 
+<pre>
+OPTIONS="-D --allow-tell --create-prefs --max-children 5 --helper-home-dir" 
 </pre>
 
-Don't forget to restart you're spamd server after that (`sudo /etc/init.d/spamassassin restart` on debian).
+Don't forget to restart you're spamd server after that
+ (`sudo service spamassassin restart` on debian).
 
-</div>
 
 ## isbg<a name="isbg"></a>
 
@@ -129,41 +136,47 @@ The default behaviour of isbg is to not make any changes your Inbox
 unless you specify specific command line options. Consequently you can 
 experiment without worry at the begining.
 
-Your first step is to create a new folder to receive suspected spam. I use one named 'spam'.
+Your first step is to create a new folder to receive suspected spam.
+ I use one named 'spam'.
 
-Run isbg with the --help option to see what options are available:
+Run isbg with the `--help` option to see what options are available:
 
-bc.    $ isbg.py --help
+<pre>
+    $ isbg.py --help
     isbg: IMAP Spam begone 0.97-26Mar03
     All options are optional
 
     --imaphost hostname   IMAP server name [localhost]
-          --ssl                 Make an SSL connection to the IMAP server
-          --imapuser username   Who you login as [rogerb]
-          --imapinbox mbox      Name of your inbox folder [INBOX]
-          --spaminbox mbox      Name of your spam folder [INBOX.spam]
-          --maxsize numbytes    Messages larger than this will be ignored as they are
+    --ssl                 Make an SSL connection to the IMAP server
+    --imapuser username   Who you login as [rogerb]
+    --imapinbox mbox      Name of your inbox folder [INBOX]
+    --spaminbox mbox      Name of your spam folder [INBOX.spam]
+    --maxsize numbytes    Messages larger than this will be ignored as they are
                                 unlikely to be spam [120000]
-          --noreport            Don't include the SpamAssassin report in the message
+    --noreport            Don't include the SpamAssassin report in the message
                                 copied to your spam folder
-          --flag                The spams will be flagged in your inbox
-          --delete              The spams will be marked for deletion from your inbox
-          --expunge             Cause marked for deletion messages to also be deleted
+    --flag                The spams will be flagged in your inbox
+    --delete              The spams will be marked for deletion from your inbox
+    --expunge             Cause marked for deletion messages to also be deleted
                                 (only useful if --delete is specified)
-          --verbose             Show IMAP stuff happening
-          --spamc               Use spamc instead of standalone SpamAssassin binary
-          --savepw              Store the password to be used in future runs
-          --nostats             Don't print stats
-          --exitcodes           Use different exitcodes (see doc)
-        (Your inbox will remain untouched unless you specify --flag or --delete)
+    --verbose             Show IMAP stuff happening
+    --spamc               Use spamc instead of standalone SpamAssassin binary
+    --savepw              Store the password to be used in future runs
+    --nostats             Don't print stats
+    --exitcodes           Use different exitcodes (see doc)
+
+    (Your inbox will remain untouched unless you specify --flag or --delete)
+</pre>
 
 ## Do your first run.<a name="Do-your-first-run"></a>
 
-bc.  $ isbg.py --imaphost mail.example.com  --savepw
+<pre>
+$ isbg.py --imaphost mail.example.com  --savepw
 IMAP password for [rogerb@mail.example.com](mailto:rogerb@mail.example.com):
+</pre>
 
 The amount of time it takes will be proportional to the size of your
- inbox. You can specify --verbose if you want to see the gory details of
+ inbox. You can specify `--verbose` if you want to see the gory details of
  what is going on.
 
 You can now examine your spam folder and will see what spam was 
