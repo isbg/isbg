@@ -1,8 +1,3 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head>
-
-<div class="wiki">
-
 # IMAP Spam Begone
 
 isbg is a script that makes it easy to scan an IMAP inbox for spam using SpamAssassin and get your spam moved to another folder.
