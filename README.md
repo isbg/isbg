@@ -163,17 +163,25 @@ $ isbg.py --help
     --imapuser username   Who you login as [rogerb]
     --imapinbox mbox      Name of your inbox folder [INBOX]
     --spaminbox mbox      Name of your spam folder [INBOX.spam]
+    --teachonly           Don't search spam, just learn from folders
+    --learnspambox mbox   Name of your learn spam folder [INBOX.spam]
+    --learnhambox mbox    Name of your learn ham folder [INBOX]
+    --movehamto mbox      Move ham to folder [INBOX.ham]
+    --learnthendestroy    Mark learnt messages for deletion
     --maxsize numbytes    Messages larger than this will be ignored as they are
                           unlikely to be spam [120000]
     --noreport            Don't include the SpamAssassin report in the message
                           copied to your spam folder
     --flag                The spams will be flagged in your inbox
     --delete              The spams will be marked for deletion from your inbox
+    --deletehigherthan #  Delete any spam with a score higher than #
     --expunge             Cause marked for deletion messages to also be deleted
                           (only useful if --delete is specified)
     --verbose             Show IMAP stuff happening
     --spamc               Use spamc instead of standalone SpamAssassin binary
     --savepw              Store the password to be used in future runs
+    --noninteractive      Prevent interactive requests
+    --ignorelockfile      Don't stop if lock file is present
     --nostats             Don't print stats
     --exitcodes           Use different exitcodes (see doc)
 
@@ -253,6 +261,9 @@ Consequently you can just run isbg against different servers/accounts
 and it will automatically keep the tracked UIDs seperate. You can 
 override the filename with `--trackfile`.
 
+To run isbg for multiple accounts one after another, it is possible to use a
+bash script like the one in the git repository called `multiple_accounts.sh`.
+
 # Saving your password<a name="Saving-your-password"></a>
 
 If you don't want isbg to prompt you for your password each time, 
@@ -319,6 +330,8 @@ The IMAP specification does not permit clients to change the Recent flag.
 *   Auto report messages to Razor (high scoring ones that are definitely spam)
 *   Seperate out messages that may be false positives (scores
  close to SpamAssassin thresholds) from the definite spam ones.
+*   Integrate multiple accounts function to main program
+*   Write program as main()
 
 # Contact and about<a name="Contact-and-about"></a>
 
