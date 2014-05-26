@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # This Python program scans an IMAP Inbox and runs every
 # entry against SpamAssassin. For any entries that match,
