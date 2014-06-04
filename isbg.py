@@ -1,23 +1,68 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This Python program scans an IMAP Inbox and runs every
-# entry against SpamAssassin. For any entries that match,
-# the message is copied to another folder, and the original
-# marked or deleted.
+"""
+This Python program scans an IMAP Inbox and runs every entry against
+SpamAssassin. For any entries that match, the message is copied to another
+folder, and the original marked or deleted.
 
-# This software was mainly written Roger Binns
-# <rogerb@rogerbinns.com> and maintained by Thomas Lecavelier
-# <thomas@lecavelier.name> since novembre 2009.
-# You may use isbg under any OSI approved open source license
-# such as those listed at http://opensource.org/licenses/alphabetical
+This software was mainly written Roger Binns <rogerb@rogerbinns.com>
+and maintained by Thomas Lecavelier <thomas@lecavelier.name> since
+novembre 2009. You may use isbg under any OSI approved open source license
+such as those listed at http://opensource.org/licenses/alphabetical
+
+Usage:
+    isbg.py [options]
+    isbg.py (-h | --help)
+    isbg.py --version
+
+Options:
+    --delete             The spams will be marked for deletion from your inbox
+    --deletehigherthan # Delete any spam with a score higher than #
+    --exitcodes          Use different exitcodes (see doc)
+    --expunge            Cause marked for deletion messages to also be deleted
+                         (only useful if --delete is specified)
+    --flag               The spams will be flagged in your inbox
+    --help               Show the help screen
+    --ignorelockfile     Don't stop if lock file is present
+    --imaphost hostname  IMAP server name [%s]
+    --imapuser username  Who you login as [%s]
+    --imapinbox mbox     Name of your inbox folder [%s]
+    --learnspambox mbox  Name of your learn spam folder [%s]
+    --learnhambox mbox   Name of your learn ham folder [%s]
+    --learnthendestroy   Mark learnt messages for deletion
+    --maxsize numbytes   Messages larger than this will be ignored as they are
+                         unlikely to be spam [%d]
+    --movehamto mbox     Move ham to folder [%s]
+    --noninteractive     Prevent interactive requests
+    --noreport           Don't include the SpamAssassin report in the message
+                         copied to your spam folder
+    --nostats            Don't print stats
+    --savepw             Store the password to be used in future runs
+    --spamc              Use spamc instead of standalone SpamAssassin binary
+    --spaminbox mbox     Name of your spam folder [%s]
+    --teachonly          Don't search spam, just learn from folders
+    --verbose            Show IMAP stuff happening
+    --version            Show the version information
+
+    (Your inbox will remain untouched unless you specify --flag or --delete)
+
+""" % (imaphost, imapuser, imapinbox, learnspambox, learnhambox, thresholdsize,
+       movehamto, spaminbox)
+
+import sys # Because sys.stderr.write() is called bellow
+
+try:
+    from docopt import docopt  # Creating command-line interface
+except ImportError:
+    sys.stderr.write("Missing dependency: docopt")
+
 
 version="0.99"
 
 from subprocess import Popen, PIPE
 
 import imaplib
-import sys
 import re
 import os
 import getpass
