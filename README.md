@@ -120,7 +120,7 @@ If you want to use the `--learnspambox` or `--learnhambox`, you'll have
 If you want to use `--learnspambox` or `--learnhambox` features, 
 you have to add this configuration:
 
-#### Allow Tell<a name="Allow-Tell"></a>
+#### Allow Tell<a name="Allow-tell"></a>
 
 You have to start `spamd` with the `--allow-tell` option.
 
