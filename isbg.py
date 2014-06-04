@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-This Python program scans an IMAP Inbox and runs every entry against
-SpamAssassin. For any entries that match, the message is copied to another
-folder, and the original marked or deleted.
+isbg scans an IMAP Inbox and runs every entry against SpamAssassin.
+For any entries that match, the message is copied to another folder,
+and the original marked or deleted.
 
 This software was mainly written Roger Binns <rogerb@rogerbinns.com>
 and maintained by Thomas Lecavelier <thomas@lecavelier.name> since
-novembre 2009. You may use isbg under any OSI approved open source license
-such as those listed at http://opensource.org/licenses/alphabetical
+novembre 2009. You may use isbg under any OSI approved open source
+license such as those listed at http://opensource.org/licenses/alphabetical
 
 Usage:
     isbg.py [options]
@@ -25,30 +25,38 @@ Options:
     --flag               The spams will be flagged in your inbox
     --help               Show the help screen
     --ignorelockfile     Don't stop if lock file is present
-    --imaphost hostname  IMAP server name [%s]
-    --imapuser username  Who you login as [%s]
-    --imapinbox mbox     Name of your inbox folder [%s]
-    --learnspambox mbox  Name of your learn spam folder [%s]
-    --learnhambox mbox   Name of your learn ham folder [%s]
+    --imaphost hostname  IMAP server name
+    --imappasswd passwd  IMAP account password
+    --imapport           Use a custom port
+    --imapuser username  Who you login as
+    --imapinbox mbox     Name of your inbox folder
+    --learnspambox mbox  Name of your learn spam folder
+    --learnhambox mbox   Name of your learn ham folder
     --learnthendestroy   Mark learnt messages for deletion
+    --lockfilegrace #    Set the lifetime of the lock file in minutes
+    --lockfilename	 Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
-                         unlikely to be spam [%d]
-    --movehamto mbox     Move ham to folder [%s]
+                         unlikely to be spam
+    --movehamto mbox     Move ham to folder
     --noninteractive     Prevent interactive requests
     --noreport           Don't include the SpamAssassin report in the message
                          copied to your spam folder
     --nostats            Don't print stats
+    --passwdfilename     #TODO
+    --satest             #TODO
+    --sasave             #TODO
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
-    --spaminbox mbox     Name of your spam folder [%s]
+    --spamflagscmd       #TODO
+    --spaminbox mbox     Name of your spam folder
+    --ssl		 Use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
     --verbose            Show IMAP stuff happening
     --version            Show the version information
 
     (Your inbox will remain untouched unless you specify --flag or --delete)
 
-""" % (imaphost, imapuser, imapinbox, learnspambox, learnhambox, thresholdsize,
-       movehamto, spaminbox)
+"""
 
 import sys # Because sys.stderr.write() is called bellow
 
@@ -77,7 +85,7 @@ try:
 except ImportError:
   from md5 import md5
 
-# You can specify your imap password using a command line option (--imappassword).
+# You can specify your imap password using a command line option (--imappasswd).
 # This however is a really bad idea since any user on the system can run
 # ps and see the command line arguments. If you really must do it non-interactively
 # then set the password here.
@@ -86,7 +94,7 @@ imapuser=getpass.getuser()
 imaphost='localhost'
 imapport=0 # autodetect - 143 for standard connection, 993 for imaps
 usessl=0
-imappassword=None
+imappasswd=None
 imapinbox="INBOX"
 spaminbox="INBOX.spam"
 teachonly=0
@@ -100,9 +108,9 @@ pastuidsfile=None
 lockfile=None
 lockfilename=None
 ignorelockfile=0
-lockfilegraceminutes=240 
+lockfilegrace=240 
 spamc=False
-passwordfilename=None # where the password is stored if requested
+passwdfilename=None # where the password is stored if requested
 savepw=0              # save the password
 alreadylearnt="Message was already un/learned"
 
@@ -126,6 +134,7 @@ verbose=0
 # print stats at end
 stats=1
 # use different exit codes to show what happened
+B
 exitcodes=0
 
 ###
@@ -153,46 +162,6 @@ uidfetchbatchsize=25
 passwordhashlen=256 # should be a multiple of 16
 passwordhash=None
 
-# Usage message - note that not all options are documented
-def usage(ec):
-    sslmsg=""
-    if hasattr(socket, "ssl"):
-        sslmsg="""
-  --ssl                 Make an SSL connection to the IMAP server"""
-    sys.stderr.write("""isbg: IMAP Spam begone %s
-
-All options are optional (\o/), default are between brackets
-
-  --imaphost hostname   IMAP server name [%s]%s
-  --imapuser username   Who you login as [%s]
-  --imapinbox mbox      Name of your inbox folder [%s]
-  --spaminbox mbox      Name of your spam folder [%s]
-  --teachonly           Don't search spam, just learn from folders
-  --learnspambox mbox   Name of your learn spam folder [%s]
-  --learnhambox mbox    Name of your learn ham folder [%s]
-  --movehamto mbox      Move ham to folder [%s]
-  --learnthendestroy    Mark learnt messages for deletion
-  --maxsize numbytes    Messages larger than this will be ignored as they are
-                        unlikely to be spam [%d]
-  --noreport            Don't include the SpamAssassin report in the message
-                        copied to your spam folder
-  --flag                The spams will be flagged in your inbox
-  --delete              The spams will be marked for deletion from your inbox
-  --deletehigherthan #  Delete any spam with a score higher than #
-  --expunge             Cause marked for deletion messages to also be deleted
-                        (only useful if --delete is specified)
-  --verbose             Show IMAP stuff happening
-  --spamc               Use spamc instead of standalone SpamAssassin binary
-  --savepw              Store the password to be used in future runs
-  --noninteractive      Prevent interactive requests
-  --ignorelockfile      Don't stop if lock file is present
-  --nostats             Don't print stats
-  --exitcodes           Use different exitcodes (see doc)
-
-(Your inbox will remain untouched unless you specify --flag or --delete)
-
-See http://redmine.ookook.fr/projects/isbg/wiki for more details\n""" % (version, imaphost, sslmsg, imapuser, imapinbox, spaminbox, learnspambox, learnhambox, movehamto, thresholdsize))
-    sys.exit(ec)
 
 def errorexit(msg, exitcode=exitcodeflags):
     sys.stderr.write(msg)
@@ -210,6 +179,7 @@ def hexof(x):
     return res
 
 def hexdigit(c):
+    locals()[p[0][2:]] = opts["--lockfilegrace"]
     if c>='0' and c<='9':
         return ord(c)-ord('0')
     if c>='a' and c<='f':
@@ -226,86 +196,83 @@ def dehexof(x):
     return res
 
 
-# argument processing
-longopts=[ "imaphost=", "imapuser=", "imapinbox=", "spaminbox=",
-       "maxsize=", "noreport", "flag", "delete", "deletehigherthan=",
-       "expunge", "verbose", "trackfile=", "spamc", "ssl", "savepw",
-       "nostats", "exitcodes", "learnhambox=", "movehamto=",
-       "learnspambox=", "teachonly", "learnthendestroy", "noninteractive",
-       "ignorelockfile",
-       # options not mentioned in usage
-       "imappassword=", "satest=", "sasave=", "spamflagscmd=", "spamflags=",
-       "help", "version", "imapport=", "passwordfilename=", "lockfilegraceminutes="
-       ]
-
+# Argument processing
 try:
-    opts, pargs=getopt.getopt(sys.argv[1:], None, longopts)
+    opts = docopt(__doc__, version="0.99")
 except Exception,e:
-    errorexit("Option processing failed - "+str(e))
+    errorexit("Option processing failed - " + str(e))
 
-if len(pargs):
-    errorexit("Unrecognised option(s) - "+`pargs`)
+if opts["--delete"] == True:
+    addspamflag("\\Deleted")
 
-for p in opts:
-    if p[0]=="--maxsize":
-        try:
-            thresholdsize=int(p[1])
-        except:
-            errorexit("Unrecognised size - "+p[1])
-        if thresholdsize<1:
-            errorexit("Size "+`thresholdsize`+" is too small")
-    elif p[0]=="--deletehigherthan":
-        try:
-            deletehigherthan=float(p[1])
-        except:
-            errorexit("Unrecognized score - "+p[1])
-        if deletehigherthan<1:
-            errorexit("Score "+`deletehigherthan`+" is too small")
-    elif p[0]=="--imapport":
-        imapport=int(p[1])
-    elif p[0]=="--noreport":
-        increport=0
-    elif p[0]=="--noninteractive":
-        interactive=0
-    elif p[0]=="--flag":
-        addspamflag("\\Flagged")
-    elif p[0]=="--delete":
-        addspamflag("\\Deleted")
-    elif p[0]=="--spamc":
-        spamc=True
-        satest=["spamc", "-c"]
-        sasave=["spamc"]
-    elif p[0]=="--expunge":
-        expunge=1
-    elif p[0]=="--teachonly":
-        teachonly=1
-    elif p[0]=="--learnthendestroy":
-        learnthendestroy=1
-    elif p[0]=="--verbose":
-        verbose=1
-    elif p[0]=="--ssl":
-        usessl=1
-    elif p[0]=="--savepw":
-        savepw=1
-    elif p[0]=="--nostats":
-        stats=0
-    elif p[0]=="--exitcodes":
-        exitcodes=1
-    elif p[0]=="--help":
-        usage(0)
-    elif p[0]=="--version":
-        print version
-        sys.exit(0)
-    elif p[0]=="--trackfile":
-        pastuidsfile=p[1]
-    elif p[0]=="--lockfilename":
-        lockfilename=p[1]
-    elif p[0]=="--ignorelockfile":
-        ignorelockfile=1
-    elif p[0]=="--lockfilegraceminutes":
-        lockfilegraceminutes = int(p[1])
-    else:
-        locals()[p[0][2:]]=p[1]
+elif opts["--deletehigherthan"] != None:
+    try:
+        deletehigherthan = float(opts["--deletehigherthan"])
+    except:
+        errorexit("Unrecognized score - " + opts["--deletehigherthan"])
+    if deletehigherthan < 1:
+        errorexit("Score " + `deletehigherthan` + " is too small")
+
+elif opts["--exitcodes"] == True:
+    exitcodes = 1
+
+elif opts["--expunge"] == True:
+    expunge = 1
+
+elif opts["--flag"] == True:
+    addspamflag("\\Flagged")
+
+elif opts["--ignorelockfile"] == True:
+    ignorelockfile = 1
+
+elif opts["--learnthendestroy"] == True:
+    learnthendestroy = 1
+
+elif opts["--imapport"] != None:
+    imapport = int(opts["--imapport"])
+
+elif opts["--lockfilegrace"] != None:
+    lockfilegrace = int(opts["--lockfilegrace"])
+
+elif opts["--maxsize"] != None:
+    try:
+        thresholdsize = int(opts["--maxsize"])
+    except:
+        errorexit("Unrecognised size - " + opts["--maxsize"])
+    if thresholdsize < 1:
+        errorexit("Size " + `thresholdsize` + " is too small")
+
+elif opts["--noninteractive"] == True:
+    interactive = 0
+
+elif opts["--noreport"] == True:
+    increport = 0
+
+elif opts["--nostats"] == True:
+    stats = 0
+
+elif opts["--savepw"] == True:
+    savepw = 1
+
+elif opts["--spamc"] == True:
+    spamc = True
+    satest = ["spamc", "-c"]
+    sasave = ["spamc"]
+
+elif opts["--ssl"] == True:
+    usessl = 1
+
+elif opts["--teachonly"] == True:
+    teachonly = 1
+
+elif opts["--verbose"] == True:
+    verbose = 1
+
+elif opts["--trackfile"] != None:
+        pastuidsfile = opts["--trackfile"]
+
+elif opts["--lockfilename"] != None:
+    lockfilename = opts["--lockfilename"] 
 
 # fixup any arguments
 
@@ -352,12 +319,12 @@ def setpw(pw, hash):
         res[i]=chr( ord(res[i]) ^ ord(pw[i]) )
     return string.join(res, '')
 
-if passwordfilename is None:
+if passwdfilename is None:
     m=md5()
     m.update(imaphost)
     m.update(imapuser)
     m.update(`imapport`)
-    passwordfilename=os.path.expanduser("~"+os.sep+".isbg-"+hexof(m.digest()))
+    passwdfilename=os.path.expanduser("~"+os.sep+".isbg-"+hexof(m.digest()))
 
 if passwordhash is None:
     # We make hash that the password is xor'ed against
@@ -377,14 +344,14 @@ if verbose:
     print "Lock file is", lockfilename
     print "Trackfile is", pastuidsfile
     print "SpamFlags are", spamflags
-    print "Password file is", passwordfilename
+    print "Password file is", passwdfilename
  
 # Acquirelockfilename or exit
 if ignorelockfile:
   if verbose:
     print "Lock file is ignored. Continue."
 else:
-  if os.path.exists(lockfilename) and (os.path.getmtime(lockfilename) + (lockfilegraceminutes * 60) > time.time()):
+  if os.path.exists(lockfilename) and (os.path.getmtime(lockfilename) + (lockfilegrace * 60) > time.time()):
     if verbose:
       print "\nLock file is present. Guessing isbg is already running. Exit."
     exit(exitcodelocked)
@@ -394,28 +361,28 @@ else:
     lockfile.close()
 
 # Figure out the password
-if imappassword is None:
-    if not savepw and os.path.exists(passwordfilename):
+if imappasswd is None:
+    if not savepw and os.path.exists(passwdfilename):
         try:
-            imappassword=getpw(dehexof(open(passwordfilename, "rb").read()), passwordhash)
+            imappasswd=getpw(dehexof(open(pwdfilename, "rb").read()), passwordhash)
             if verbose: print "Successfully read password file"
         except:
             pass
         
     # do we have to prompt?
-    if imappassword is None:
+    if imappasswd is None:
         if not interactive:
           errorexit("You need to specify your imap password and save it with the --savepw switch", exitcodeok)
-        imappassword=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
+        imappasswd=getpass.getpass("IMAP password for %s@%s: " % (imapuser, imaphost))
 
     # Should we save it?
     if savepw:
-        f=open(passwordfilename, "wb+")
+        f=open(passwdfilename, "wb+")
         try:
-            os.chmod(passwordfilename, 0600)
+            os.chmod(passwdfilename, 0600)
         except:
             pass
-        f.write(hexof(setpw(imappassword, passwordhash)))
+        f.write(hexof(setpw(imappasswd, passwordhash)))
         f.close()
 
 # Retrieve the entire message
@@ -460,7 +427,7 @@ else:
     imap=imaplib.IMAP4(imaphost,imapport)
 
 # Authenticate (only simple supported)
-res=imap.login(imapuser, imappassword)
+res=imap.login(imapuser, imappasswd)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
 # Spamassassion training
