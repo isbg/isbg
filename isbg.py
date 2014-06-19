@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#TODO PEP 8 formating
+
 """
 isbg scans an IMAP Inbox and runs every entry against SpamAssassin.
 For any entries that match, the message is copied to another folder,
@@ -26,6 +28,7 @@ Options:
     --help               Show the help screen
     --ignorelockfile     Don't stop if lock file is present
     --imaphost hostname  IMAP server name
+    --imaplist           List imap directories
     --imappasswd passwd  IMAP account password
     --imapport           Use a custom port
     --imapuser username  Who you login as
@@ -33,7 +36,7 @@ Options:
     --learnspambox mbox  Name of your learn spam folder
     --learnhambox mbox   Name of your learn ham folder
     --learnthendestroy   Mark learnt messages for deletion
-    --lockfilegrace #    Set the lifetime of the lock file in minutes
+    --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename	 Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
                          unlikely to be spam
@@ -43,14 +46,13 @@ Options:
                          copied to your spam folder
     --nostats            Don't print stats
     --passwdfilename     #TODO
-    --satest             #TODO
-    --sasave             #TODO
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
     --spamflagscmd       #TODO
     --spaminbox mbox     Name of your spam folder
-    --ssl		 Use SSL to connect to the IMAP server
+    --ssl                Use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
+    --trackfile          #TODO
     --verbose            Show IMAP stuff happening
     --version            Show the version information
 
@@ -74,7 +76,6 @@ import imaplib
 import re
 import os
 import getpass
-import getopt
 import string
 import socket
 import time
@@ -90,8 +91,8 @@ except ImportError:
 # ps and see the command line arguments. If you really must do it non-interactively
 # then set the password here.
 
-imapuser=getpass.getuser()
-imaphost='localhost'
+imapuser = ''
+imaphost=''
 imapport=0 # autodetect - 143 for standard connection, 993 for imaps
 usessl=0
 imappasswd=None
@@ -134,7 +135,6 @@ verbose=0
 # print stats at end
 stats=1
 # use different exit codes to show what happened
-B
 exitcodes=0
 
 ###
@@ -225,6 +225,31 @@ elif opts["--flag"] == True:
 elif opts["--ignorelockfile"] == True:
     ignorelockfile = 1
 
+elif opts["--imaphost"] != None:
+    imaphost = opts["--imaphost"]
+
+elif opts["--imappasswd"] != None:
+    imappasswd = opts["--imappasswd"]
+
+elif opts["--imapport"] != None:
+    imapport = opts["--imapport"]
+
+if opts["--imapuser"] != None:
+    imapuser = opts["--imapuser"]
+
+elif opts["--imapinbox"] != None:
+    imapinbox= opts["--imapinbox"]
+
+
+elif opts["--imaphambox"] != None:
+    imaphambox = opts["--imaphambox"]
+
+elif opts["--learnspambox"] != None:
+    learnspambox = opts["--learnspambox"]
+
+elif opts["--learnhambox"] != None:
+    learnhambox = opts["--learnhambox"]
+
 elif opts["--learnthendestroy"] == True:
     learnthendestroy = 1
 
@@ -259,7 +284,11 @@ elif opts["--spamc"] == True:
     satest = ["spamc", "-c"]
     sasave = ["spamc"]
 
+if opts["--spaminbox"] != None:
+    spaminbox = opts["--spaminbox"]
+
 elif opts["--ssl"] == True:
+    print("ssl true")
     usessl = 1
 
 elif opts["--teachonly"] == True:
@@ -273,6 +302,7 @@ elif opts["--trackfile"] != None:
 
 elif opts["--lockfilename"] != None:
     lockfilename = opts["--lockfilename"] 
+
 
 # fixup any arguments
 
@@ -421,6 +451,8 @@ def assertok(res,*args):
         errorexit("\n%s returned %s - aborting\n" % (`args`, res ), exitcodeimap)
 
 # Main code starts here
+
+
 if usessl:
     imap=imaplib.IMAP4_SSL(imaphost, imapport)
 else:
@@ -430,7 +462,12 @@ else:
 res=imap.login(imapuser, imappasswd)
 assertok(res, "login",imapuser, 'xxxxxxxx')
 
-# Spamassassion training
+# List imap directories
+#TODO Format output
+if opts["--imaplist"] == True:
+    print(imap.list())
+
+# Spamassassin training
 if learnspambox:
   if verbose: print "Teach SPAM to SA from:", learnspambox
   res=imap.select(learnspambox, 0)
