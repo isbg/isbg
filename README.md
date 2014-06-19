@@ -250,6 +250,9 @@ seperate the components.
 The UWash server typically has the folders below Mail and uses
 slash (`/`) to seperate components.
 
+If you don't know how your IMAP folders are implemented, you can always use
+the `--imaplist` option to find out.
+
 # Advanced options<a name="Advanced-options"></a>
 
 If you would like to do something beyond the options listed in the 
