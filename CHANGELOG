@@ -1,10 +1,10 @@
 1.00 (to be released)
 =====================
-  * The CLI interface is now implemented with docopt
+  * The CLI interface is now implemented with docopt (to finish)
   * The README now includes the documentation
-  * New command --imaplist lists the directories in IMAP account
-  * Code now follows PEP-8 style guide
-  * Renamed variables to be consistent 
+  * New command --imaplist lists the directories in IMAP account (to polish)
+  * Code now follows PEP-8 style guide (to finish)
+  * Renamed variables to be consistent (to finish)
 
 0.99 (20100303)
 ===============
