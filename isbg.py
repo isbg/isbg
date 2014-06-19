@@ -322,8 +322,8 @@ def getpw(data,hash):
         
 def setpw(pw, hash):
     if len(pw) > passwordhashlen:
-        raise ValueError("Password of length %d is too long to
-                         store (max accepted is %d)"
+        raise ValueError("""Password of length %d is too long to
+                         store (max accepted is %d)"""
                          % (len(pw), passwordhashlen))
     res = list(hash)
     for i in range(0, len(pw)):
@@ -363,12 +363,12 @@ if ignorelockfile:
     if verbose:
         print("Lock file is ignored. Continue.")
 else:
-    if os.path.exists(lockfilename) and
-    (os.path.getmtime(lockfilename) + (lockfilegrace * 60) > time.time()):
+    if os.path.exists(lockfilename) and (os.path.getmtime(lockfilename) +
+                                         (lockfilegrace * 60) > time.time()):
         if verbose:
-            print("\nLock file is present. Guessing isbg
-                  is already running. Exit.")
-    exit(exitcodelocked)
+            print("""\nLock file is present. Guessing isbg
+                  is already running. Exit.""")
+        exit(exitcodelocked)
     else:
         lockfile = open(lockfilename, 'w')
         lockfile.write(`os.getpid()`)
@@ -388,8 +388,8 @@ if imappasswd is None:
     # do we have to prompt?
     if imappasswd is None:
         if not interactive:
-            errorexit("You need to specify your imap password 
-                      and save it with the --savepw switch", exitcodeok)
+            errorexit("""You need to specify your imap password and save it
+                      with the --savepw switch""", exitcodeok)
         imappasswd = getpass.getpass("IMAP password for %s@%s: "
                                      % (imapuser, imaphost))
 
@@ -414,8 +414,8 @@ def getmessage(uid, append_to = None):
         except:
             if verbose:
                 print("Confused - rfc822 fetch gave " + `res`)
-                print("The message was probably deleted
-                      while we were running")
+                print("""The message was probably deleted
+                      while we were running""")
             if append_to:
                 append_to.append(uid)
     else:
