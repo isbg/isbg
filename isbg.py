@@ -30,14 +30,14 @@ Options:
     --imaphost hostname  IMAP server name
     --imaplist           List imap directories
     --imappasswd passwd  IMAP account password
-    --imapport           Use a custom port
+    --imapport port      Use a custom port
     --imapuser username  Who you login as
     --imapinbox mbox     Name of your inbox folder
     --learnspambox mbox  Name of your learn spam folder
     --learnhambox mbox   Name of your learn ham folder
     --learnthendestroy   Mark learnt messages for deletion
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
-    --lockfilename	 Override the lock file name
+    --lockfilename file  Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
                          unlikely to be spam
     --movehamto mbox     Move ham to folder
@@ -86,23 +86,12 @@ try:
 except ImportError:
   from md5 import md5
 
-# You can specify your imap password using a command line option (--imappasswd).
-# This however is a really bad idea since any user on the system can run
-# ps and see the command line arguments. If you really must do it non-interactively
-# then set the password here.
 
 imapuser = ''
-imaphost=''
-imapport=0 # autodetect - 143 for standard connection, 993 for imaps
-usessl=0
-imappasswd=None
-imapinbox="INBOX"
-spaminbox="INBOX.spam"
-teachonly=0
-learnspambox=None
-learnhambox=None
-movehamto=None
-learnthendestroy=0
+imaphost = ''
+imappasswd = None
+imapinbox = "INBOX"
+spaminbox = "INBOX.spam"
 interactive=sys.stdin.isatty()
 thresholdsize=120000 # messages larger than this aren't considered
 pastuidsfile=None
@@ -232,14 +221,13 @@ elif opts["--imappasswd"] != None:
     imappasswd = opts["--imappasswd"]
 
 elif opts["--imapport"] != None:
-    imapport = opts["--imapport"]
+    imapport = int(opts["--imapport"])
 
 if opts["--imapuser"] != None:
     imapuser = opts["--imapuser"]
 
 elif opts["--imapinbox"] != None:
     imapinbox= opts["--imapinbox"]
-
 
 elif opts["--imaphambox"] != None:
     imaphambox = opts["--imaphambox"]
@@ -249,12 +237,6 @@ elif opts["--learnspambox"] != None:
 
 elif opts["--learnhambox"] != None:
     learnhambox = opts["--learnhambox"]
-
-elif opts["--learnthendestroy"] == True:
-    learnthendestroy = 1
-
-elif opts["--imapport"] != None:
-    imapport = int(opts["--imapport"])
 
 elif opts["--lockfilegrace"] != None:
     lockfilegrace = int(opts["--lockfilegrace"])
@@ -266,6 +248,9 @@ elif opts["--maxsize"] != None:
         errorexit("Unrecognised size - " + opts["--maxsize"])
     if thresholdsize < 1:
         errorexit("Size " + `thresholdsize` + " is too small")
+
+elif opts["--movehamto"] != None:
+    movehamto = opts["--movehamto"]
 
 elif opts["--noninteractive"] == True:
     interactive = 0
@@ -287,13 +272,6 @@ elif opts["--spamc"] == True:
 if opts["--spaminbox"] != None:
     spaminbox = opts["--spaminbox"]
 
-elif opts["--ssl"] == True:
-    print("ssl true")
-    usessl = 1
-
-elif opts["--teachonly"] == True:
-    teachonly = 1
-
 elif opts["--verbose"] == True:
     verbose = 1
 
@@ -309,9 +287,11 @@ elif opts["--lockfilename"] != None:
 if spamflags[-1]!=')':
     spamflags=spamflags+')'
 
-if imapport==0:
-    if usessl: imapport=993
-    else:      imapport=143
+if opts["--imapport"] == None:
+    if opts["--ssl"] == True:
+        imapport = 993
+    else:
+        imapport = 143
 
 if pastuidsfile is None:
     pastuidsfile=os.path.expanduser("~"+os.sep+".isbg-track")
@@ -452,11 +432,10 @@ def assertok(res,*args):
 
 # Main code starts here
 
-
-if usessl:
-    imap=imaplib.IMAP4_SSL(imaphost, imapport)
+if opts["--ssl"] == True:
+    imap = imaplib.IMAP4_SSL(imaphost, imapport)
 else:
-    imap=imaplib.IMAP4(imaphost,imapport)
+    imap = imaplib.IMAP4(imaphost,imapport)
 
 # Authenticate (only simple supported)
 res=imap.login(imapuser, imappasswd)
@@ -468,7 +447,7 @@ if opts["--imaplist"] == True:
     print(imap.list())
 
 # Spamassassin training
-if learnspambox:
+if opts["--learnspambox"] != None:
   if verbose: print "Teach SPAM to SA from:", learnspambox
   res=imap.select(learnspambox, 0)
   assertok(res, 'select', learnspambox)
@@ -489,13 +468,13 @@ if learnspambox:
       p.stdin.close()
       if not out.strip() == alreadylearnt: s_learnt += 1
       if verbose: print u, out
-      if learnthendestroy:
+      if opts["--learnthendestroy"] == True:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
   if expunge:
     imap.expunge()
 
-if learnhambox:
+if opts["--learnhambox"] != None:
   if verbose: print "Teach HAM to SA from:", learnhambox
   res=imap.select(learnhambox, 0)
   assertok(res, 'select', learnhambox)
@@ -516,18 +495,18 @@ if learnhambox:
       p.stdin.close()
       if not out.strip() == alreadylearnt: h_learnt += 1
       if verbose: print u, out
-      if movehamto:
+      if opts["movehamto"] != None:
         res=imap.uid("COPY", u, movehamto)
         assertok(res, "uid copy", u, movehamto)
-      if learnthendestroy or movehamto:
+      if opts["--learnthendestroy"] or opts["--movehamto"] != None:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-  if expunge or movehamto:
+  if expunge or opts["--movehamto"] != None:
     imap.expunge()
 
 uids=[]
 
-if not teachonly:
+if opts["--teachonly"] == False:
   # check spaminbox exists by examining it
   res=imap.select(spaminbox, 1)
   assertok(res, 'select', spaminbox, 1)
@@ -639,7 +618,7 @@ if numspam or spamdeleted:
     if expunge:
       imap.expunge()
 
-if not teachonly:
+if opts["==teachonly"] == False:
   # Now tidy up lists of uids
   newpastuids = list(set([u for u in pastuids if u in inboxuids]))
 
@@ -661,11 +640,11 @@ del imap
 
 
 if stats:
-  if learnspambox:
+  if opts["--learnspambox"] != None:
     print "%d/%d spams learnt" % (s_learnt, s_tolearn)
-  if learnhambox:
+  if opts["--learnhambox"] != None:
     print "%d/%d hams learnt" % (h_learnt, h_tolearn)
-  if not teachonly:
+  if opts["--teachonly"] == False:
     print "%d spams found in %d messages" % (numspam, nummsg)
     print "%d/%d was automatically deleted" % (spamdeleted, numspam)
 

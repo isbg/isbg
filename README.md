@@ -188,6 +188,12 @@ $ isbg.py --help
     (Your inbox will remain untouched unless you specify --flag or --delete)
 </pre>
 
+You can specify your imap password using `--imappasswd`.
+This however is a really bad idea since any user on the system can run `ps` and
+ see the command line arguments. If you really must do it non-interactively
+ then set the password here.
+
+
 ## Do your first run.<a name="Do-your-first-run"></a>
 
 <pre>
