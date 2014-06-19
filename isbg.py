@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#TODO PEP 8 formating
-
 """
 isbg scans an IMAP Inbox and runs every entry against SpamAssassin.
 For any entries that match, the message is copied to another folder,
@@ -21,7 +19,7 @@ Usage:
 Options:
     --delete             The spams will be marked for deletion from your inbox
     --deletehigherthan # Delete any spam with a score higher than #
-    --exitcodes          Use different exitcodes (see doc)
+    --exitcodes          Use exitcodes to detail  what happened
     --expunge            Cause marked for deletion messages to also be deleted
                          (only useful if --delete is specified)
     --flag               The spams will be flagged in your inbox
@@ -94,16 +92,11 @@ spaminbox = "INBOX.spam"
 interactive = sys.stdin.isatty()
 maxsize = 120000 # messages larger than this aren't considered
 pastuidsfile = None
-lockfile = None
-lockfilename = None
-ignorelockfile = 0
 lockfilegrace = 240 
-spamc = False
 passwdfilename = None # where the password is stored if requested
-savepw = 0            # save the password
 alreadylearnt = "Message was already un/learned"
 
-# satest is what command is used test if the message is spam
+# satest is the command that is used to test if the message is spam
 satest = ["spamassassin", "--exit-code"]
 # sasave is the one that dumps out a munged message including report
 sasave = ["spamassassin"]
@@ -111,19 +104,8 @@ sasave = ["spamassassin"]
 spamflagscmd = "+FLAGS.SILENT"
 # and the flags we set them to (none by default)
 spamflags = "("
-# include the spamassassin report in the message placed in spaminbox
-increport = 1
-# delete messages with a score higher than this
-deletehigherthan = 0
-# expunge before quiting causing all messages marked for deletion
-# to actually be deleted
-expunge = 0
-# print imap tracing info
-verbose = 0
-# print stats at end
-stats = 1
-# use different exit codes to show what happened
-exitcodes = 0
+# exclude the spamassassin report in the message placed in spaminbox
+noreport = False
 
 ###
 ### exitcode maps
@@ -131,16 +113,12 @@ exitcodes = 0
 
 exitcodeok = 0         # all went well
 exitcodenewmsgs = 1    # there were new messages - none of them spam
-                       #                         (if exitcodes is on)
-exitcodenewspam = 2    # they were all spams     (if exitcodes is on)
+exitcodenewspam = 2    # they were all spam
 exitcodenewmsgspam = 3 # there were new messages and new spam
-                       #                         (if exitcodes is on)
 exitcodeflags = 10     # there were errors in the command line arguments
 exitcodeimap = 11      # there was an IMAP level error
-exitcodespamc = 12     # there was error when communicating
-                       # between spamc and spamd
-exitcodetty = 20       # there was an error because we're not in an 
-                       # interactive tty
+exitcodespamc = 12     # error of communication between spamc and spamd
+exitcodetty = 20       # error because of non interative terminal
 exitcodelocked = 30    # there's certainly another isbg running
 
 # IMAP implementation detail
@@ -193,10 +171,10 @@ try:
 except Exception,e:
     errorexit("Option processing failed - " + str(e))
 
-if opts["--delete"] == True:
+if opts["--delete"] is True:
     addspamflag("\\Deleted")
 
-elif opts["--deletehigherthan"] != None:
+elif opts["--deletehigherthan"] is not None:
     try:
         deletehigherthan = float(opts["--deletehigherthan"])
     except:
@@ -204,46 +182,37 @@ elif opts["--deletehigherthan"] != None:
     if deletehigherthan < 1:
         errorexit("Score " + `deletehigherthan` + " is too small")
 
-elif opts["--exitcodes"] == True:
-    exitcodes = 1
-
-elif opts["--expunge"] == True:
-    expunge = 1
-
-elif opts["--flag"] == True:
+elif opts["--flag"] is True:
     addspamflag("\\Flagged")
 
-elif opts["--ignorelockfile"] == True:
-    ignorelockfile = 1
-
-elif opts["--imaphost"] != None:
+elif opts["--imaphost"] is not None:
     imaphost = opts["--imaphost"]
 
-elif opts["--imappasswd"] != None:
+elif opts["--imappasswd"] is not None:
     imappasswd = opts["--imappasswd"]
 
-elif opts["--imapport"] != None:
+elif opts["--imapport"] is not None:
     imapport = int(opts["--imapport"])
 
-if opts["--imapuser"] != None:
+if opts["--imapuser"] is not None:
     imapuser = opts["--imapuser"]
 
-elif opts["--imapinbox"] != None:
+elif opts["--imapinbox"] is not None:
     imapinbox= opts["--imapinbox"]
 
-elif opts["--imaphambox"] != None:
+elif opts["--imaphambox"] is not None:
     imaphambox = opts["--imaphambox"]
 
-elif opts["--learnspambox"] != None:
+elif opts["--learnspambox"] is not None:
     learnspambox = opts["--learnspambox"]
 
-elif opts["--learnhambox"] != None:
+elif opts["--learnhambox"] is not None:
     learnhambox = opts["--learnhambox"]
 
-elif opts["--lockfilegrace"] != None:
+elif opts["--lockfilegrace"] is not None:
     lockfilegrace = int(opts["--lockfilegrace"])
 
-elif opts["--maxsize"] != None:
+elif opts["--maxsize"] is not None:
     try:
         maxsize = int(opts["--maxsize"])
     except:
@@ -251,33 +220,24 @@ elif opts["--maxsize"] != None:
     if maxsize < 1:
         errorexit("Size " + `maxsize` + " is too small")
 
-elif opts["--movehamto"] != None:
+elif opts["--movehamto"] is not None:
     movehamto = opts["--movehamto"]
 
-elif opts["--noninteractive"] == True:
+elif opts["--noninteractive"] is True:
     interactive = 0
 
-elif opts["--noreport"] == True:
-    increport = 0
+elif opts["--noreport"] is True:
+    noreport = True
 
-elif opts["--nostats"] == True:
-    stats = 0
-
-elif opts["--savepw"] == True:
-    savepw = 1
-
-elif opts["--spamc"] == True:
+elif opts["--spamc"] is True:
     spamc = True
     satest = ["spamc", "-c"]
     sasave = ["spamc"]
 
-if opts["--spaminbox"] != None:
+if opts["--spaminbox"] is not None:
     spaminbox = opts["--spaminbox"]
 
-elif opts["--verbose"] == True:
-    verbose = 1
-
-elif opts["--lockfilename"] != None:
+elif opts["--lockfilename"] is not None:
     lockfilename = opts["--lockfilename"] 
 
 
@@ -286,8 +246,8 @@ elif opts["--lockfilename"] != None:
 if spamflags[-1] != ')':
     spamflags = spamflags + ')'
 
-if opts["--imapport"] == None:
-    if opts["--ssl"] == True:
+if opts["--imapport"] is None:
+    if opts["--ssl"] is True:
         imapport = 993
     else:
         imapport = 143
@@ -301,7 +261,7 @@ if pastuidsfile is None:
     res = hexof(m.digest())
     pastuidsfile = pastuidsfile + res
 
-if lockfilename is None:
+if opts["--lockfilename"] is None:
     lockfilename = os.path.expanduser("~" + os.sep + ".isbg-lock")
 
 # Delete lock file
@@ -352,20 +312,20 @@ if passwordhash is None:
         m.update(passwordhash)
         passwordhash = passwordhash + m.digest()
 
-if verbose:
+if opts["--verbose"] is True:
     print("Lock file is", lockfilename)
     print("Trackfile is", pastuidsfile)
     print("SpamFlags are", spamflags)
     print("Password file is", passwdfilename)
  
-# Acquirelockfilename or exit
-if ignorelockfile:
-    if verbose:
+# Acquire lockfilename or exit
+if opts["--ignorelockfile"] is True:
+    if opts["--verbose"] is True:
         print("Lock file is ignored. Continue.")
 else:
     if os.path.exists(lockfilename) and (os.path.getmtime(lockfilename) +
                                          (lockfilegrace * 60) > time.time()):
-        if verbose:
+        if opts["--verbose"] is True:
             print("""\nLock file is present. Guessing isbg
                   is already running. Exit.""")
         exit(exitcodelocked)
@@ -376,11 +336,11 @@ else:
 
 # Figure out the password
 if imappasswd is None:
-    if not savepw and os.path.exists(passwdfilename):
+    if opts["--savepw"] is False and os.path.exists(passwdfilename) is True:
         try:
             imappasswd = getpw(dehexof(open(pwdfilename, "rb").read()),
                                passwordhash)
-            if verbose:
+            if opts["--verbose"] is True:
                 print("Successfully read password file")
         except:
             pass
@@ -394,7 +354,7 @@ if imappasswd is None:
                                      % (imapuser, imaphost))
 
     # Should we save it?
-    if savepw:
+    if opts["--savepw"] is True:
         f = open(passwdfilename, "wb+")
         try:
             os.chmod(passwdfilename, 0600)
@@ -412,7 +372,7 @@ def getmessage(uid, append_to = None):
         try:
             body = res[1][0][1]
         except:
-            if verbose:
+            if opts["--verbose"] is True:
                 print("Confused - rfc822 fetch gave " + `res`)
                 print("""The message was probably deleted
                       while we were running""")
@@ -434,7 +394,7 @@ def crnlify(text):
 # It also prints out what happened (which would end
 # up /dev/null'ed in non-verbose mode)
 def assertok(res,*args):
-    if verbose:
+    if opts["--verbose"] is True:
         print(`args`, "=", res)
     if res[0] != "OK":
         errorexit("\n%s returned %s - aborting\n"
@@ -442,7 +402,7 @@ def assertok(res,*args):
 
 # Main code starts here
 
-if opts["--ssl"] == True:
+if opts["--ssl"] is True:
     imap = imaplib.IMAP4_SSL(imaphost, imapport)
 else:
     imap = imaplib.IMAP4(imaphost,imapport)
@@ -453,12 +413,12 @@ assertok(res, "login",imapuser, 'xxxxxxxx')
 
 # List imap directories
 #TODO Format output
-if opts["--imaplist"] == True:
+if opts["--imaplist"] is True:
     print(imap.list())
 
 # Spamassassin training
-if opts["--learnspambox"] != None:
-    if verbose:
+if opts["--learnspambox"] is not None:
+    if opts["--verbose"] is True:
         print("Teach SPAM to SA from:", learnspambox)
     res = imap.select(learnspambox, 0)
     assertok(res, 'select', learnspambox)
@@ -480,16 +440,16 @@ if opts["--learnspambox"] != None:
         p.stdin.close()
         if not out.strip() == alreadylearnt:
             s_learnt += 1
-        if verbose:
+        if opts["--verbose"] is True:
             print(u, out)
         if opts["--learnthendestroy"] == True:
             res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
             assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-    if expunge:
+    if opts["--expunge"] is True:
         imap.expunge()
 
-if opts["--learnhambox"] != None:
-    if verbose:
+if opts["--learnhambox"] is not None:
+    if opts["--verbose"] is True:
         print("Teach HAM to SA from:", learnhambox)
     res = imap.select(learnhambox, 0)
     assertok(res, 'select', learnhambox)
@@ -510,20 +470,20 @@ if opts["--learnhambox"] != None:
             errorexit("spamd is missconfigured (use --allow-tell)")
         p.stdin.close()
         if not out.strip() == alreadylearnt: h_learnt += 1
-        if verbose:
+        if opts["--verbose"] is True:
             print(u, out)
-        if opts["movehamto"] != None:
+        if opts["movehamto"] is not None:
             res = imap.uid("COPY", u, movehamto)
             assertok(res, "uid copy", u, movehamto)
-        if opts["--learnthendestroy"] or opts["--movehamto"] != None:
+        if opts["--learnthendestroy"] or opts["--movehamto"] is not None:
             res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
             assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-    if expunge or opts["--movehamto"] != None:
+    if opts["--expunge"] is True or opts["--movehamto"] is not None:
         imap.expunge()
 
 uids=[]
 
-if opts["--teachonly"] == False:
+if opts["--teachonly"] is False:
     # check spaminbox exists by examining it
     res = imap.select(spaminbox, 1)
     assertok(res, 'select', spaminbox, 1)
@@ -567,7 +527,7 @@ for u in uids:
     p = Popen(satest, stdin = PIPE, stdout = PIPE, close_fds = True)
     try:
         score = p.communicate(body)[0]
-        if not spamc:
+        if opts["--spamc"] is False:
             m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)",
                           score)
             score = m.group(1) + "/" + m.group(2) + "\n"
@@ -576,7 +536,7 @@ for u in uids:
     if score == "0/0\n":
         errorexit("spamc -> spamd error - aborting", exitcodespamc)
 
-    if verbose:
+    if opts["--verbose"] is True:
         print(u, "score:", score)
 
     code = p.returncode
@@ -585,15 +545,16 @@ for u in uids:
         pastuids.append(u)
     else:
         # Message is spam
-        if verbose:
+        if opts["--verbose"] is True:
             print(u, "is spam")
 
-        if deletehigherthan and float(score.split('/')[0]) > deletehigherthan:
+        if (opts["--deletehigherthan"] is not None and 
+            float(score.split('/')[0]) > deletehigherthan):
             spamdeletelist.append(u)
             continue
         
         # do we want to include the spam report
-        if increport:
+        if noreport is False:
             # filter it through sa
             p = Popen(sasave, stdin = PIPE, stdout = PIPE, close_fds = True)
             try:
@@ -637,10 +598,10 @@ if numspam or spamdeleted:
     for u in spamdeletelist:
         res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
         assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
-    if expunge:
+    if opts["--expunge"] is True:
         imap.expunge()
 
-if opts["==teachonly"] == False:
+if opts["==teachonly"] is False:
     # Now tidy up lists of uids
     newpastuids = list(set([u for u in pastuids if u in inboxuids]))
 
@@ -661,16 +622,16 @@ imap.logout()
 del imap
 
 
-if stats:
-    if opts["--learnspambox"] != None:
+if opts["--nostats"] is False:
+    if opts["--learnspambox"] is not None:
         print("%d/%d spams learnt") % (s_learnt, s_tolearn)
-    if opts["--learnhambox"] != None:
+    if opts["--learnhambox"] is not None:
         print("%d/%d hams learnt") % (h_learnt, h_tolearn)
-    if opts["--teachonly"] == False:
+    if opts["--teachonly"] is False:
         print("%d spams found in %d messages") % (numspam, nummsg)
         print("%d/%d was automatically deleted") % (spamdeleted, numspam)
 
-if exitcodes and nummsg:
+if opts["--exitcodes"] is True and nummsg:
     res = 0
     if numspam == 0:
         sys.exit(exitcodenewmsgs)

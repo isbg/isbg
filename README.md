@@ -306,15 +306,18 @@ When ISBG exits, it uses the exit code to tell you what happened. In
  general it is zero if all went well, and non-zero if there was a 
 problem. You can turn on additional reporting by using the `--exitcodes` 
 command line option.
-<pre>
-code  --exitcodes needed  description
-0         All went well
-1   yes   There was at least one new message, and none of the messages were spam
-2   yes   There was at least one new message, and all messages were spam
-3   yes   There were new messages, with at least one spam and one non-spam
-10        There were errors in the command line arguments
-11        The IMAP server reported an error
-</pre>
+
+|code| `--exitcodes` needed| description|
+|:---|:-------------------:|:----------:|
+|0 |  no    |All went well|
+|1 |  yes   |There was at least one new message, and none of them were spam|
+|2 |  yes   |There was at least one new message, and all them were spam|
+|3 |  yes   |There were new messages, with at least one spam and one non-spam|
+|10|  no    |There were errors in the command line arguments|
+|11|  no    |The IMAP server reported an error|
+|12|  no    |There was an error of communication between spamc and spamd|
+|20|  no    |The program was not launched in an interactive terminal|
+|30|  no    |There is another instance of `isbg` running|
 
 # Read and Seen flags<a name="Read-and-Seen-flags"></a>
 
