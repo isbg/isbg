@@ -43,10 +43,9 @@ Options:
     --noreport           Don't include the SpamAssassin report in the message
                          copied to your spam folder
     --nostats            Don't print stats
-    --passwdfilename     #TODO
+    --passwdfilename     Use a file to supply the password
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
-    --spamflagscmd       #TODO
     --spaminbox mbox     Name of your spam folder
     --ssl                Use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
@@ -63,9 +62,6 @@ try:
     from docopt import docopt  # Creating command-line interface
 except ImportError:
     sys.stderr.write("Missing dependency: docopt")
-
-
-version="0.99"
 
 from subprocess import Popen, PIPE
 
@@ -93,7 +89,6 @@ interactive = sys.stdin.isatty()
 maxsize = 120000 # messages larger than this aren't considered
 pastuidsfile = None
 lockfilegrace = 240 
-passwdfilename = None # where the password is stored if requested
 alreadylearnt = "Message was already un/learned"
 
 # satest is the command that is used to test if the message is spam
@@ -126,9 +121,9 @@ exitcodelocked = 30    # there's certainly another isbg running
 # so we break them down into smaller groups of this size
 uidfetchbatchsize = 25
 # password saving stuff. A vague level of obfuscation
-passwordhashlen = 256 # should be a multiple of 16
+passwdfilename = None
 passwordhash = None
-
+passwordhashlen = 256 # should be a multiple of 16
 
 def errorexit(msg, exitcode=exitcodeflags):
     sys.stderr.write(msg)
@@ -167,7 +162,7 @@ def dehexof(x):
 
 # Argument processing
 try:
-    opts = docopt(__doc__, version = "0.99")
+    opts = docopt(__doc__, version = "isbg version 0.99")
 except Exception,e:
     errorexit("Option processing failed - " + str(e))
 
@@ -199,9 +194,6 @@ if opts["--imapuser"] is not None:
 
 elif opts["--imapinbox"] is not None:
     imapinbox= opts["--imapinbox"]
-
-elif opts["--imaphambox"] is not None:
-    imaphambox = opts["--imaphambox"]
 
 elif opts["--learnspambox"] is not None:
     learnspambox = opts["--learnspambox"]
@@ -266,7 +258,7 @@ if opts["--lockfilename"] is None:
 
 # Delete lock file
 def removelock():
-  os.remove(lockfilename)
+    os.remove(lockfilename)
 
 atexit.register(removelock)
 
@@ -338,7 +330,7 @@ else:
 if imappasswd is None:
     if opts["--savepw"] is False and os.path.exists(passwdfilename) is True:
         try:
-            imappasswd = getpw(dehexof(open(pwdfilename, "rb").read()),
+            imappasswd = getpw(dehexof(open(passwdfilename, "rb").read()),
                                passwordhash)
             if opts["--verbose"] is True:
                 print("Successfully read password file")
