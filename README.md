@@ -20,7 +20,7 @@ leave it.
 	*   [SpamAssassin](#SpamAssassin)
 		*   [Configure your spamassassin](#Configure-your-spamassassin)
 			*   [Allow-tell](#Allow-tell)
-*   [isbg](#isbg)
+*   [CLI Options](#CLI_Options)
 *   [Do your first run.](#Do-your-first-run)
 *   [Running it](#Running-it)
 *   [Your folder names](#Your-folder-names)
@@ -120,7 +120,7 @@ If you want to use the `--learnspambox` or `--learnhambox`, you'll have
 If you want to use `--learnspambox` or `--learnhambox` features, 
 you have to add this configuration:
 
-#### Allow Tell<a name="Allow-Tell"></a>
+#### Allow Tell<a name="Allow-tell"></a>
 
 You have to start `spamd` with the `--allow-tell` option.
 
@@ -141,7 +141,7 @@ Don't forget to restart you're spamd server after that
  (`sudo service spamassassin restart` on Debian).
 
 
-## isbg<a name="isbg"></a>
+## CLI Options<a name="CLI_Options"></a>
 
 The default behaviour of isbg is to not make any changes your Inbox 
 unless you specify specific command line options. Consequently you can 
@@ -153,40 +153,55 @@ Your first step is to create a new folder to receive suspected spam.
 Run isbg with the `--help` option to see what options are available:
 
 <pre>
-$ isbg.py --help
+Usage:
+    isbg.py [options]
+    isbg.py (-h | --help)
+    isbg.py --version
 
-    isbg: IMAP Spam begone 0.97-26Mar03
-    All options are optional
-
-    --imaphost hostname   IMAP server name [localhost]
-    --ssl                 Make an SSL connection to the IMAP server
-    --imapuser username   Who you login as [rogerb]
-    --imapinbox mbox      Name of your inbox folder [INBOX]
-    --spaminbox mbox      Name of your spam folder [INBOX.spam]
-    --teachonly           Don't search spam, just learn from folders
-    --learnspambox mbox   Name of your learn spam folder [INBOX.spam]
-    --learnhambox mbox    Name of your learn ham folder [INBOX]
-    --movehamto mbox      Move ham to folder [INBOX.ham]
-    --learnthendestroy    Mark learnt messages for deletion
-    --maxsize numbytes    Messages larger than this will be ignored as they are
-                          unlikely to be spam [120000]
-    --noreport            Don't include the SpamAssassin report in the message
-                          copied to your spam folder
-    --flag                The spams will be flagged in your inbox
-    --delete              The spams will be marked for deletion from your inbox
-    --deletehigherthan #  Delete any spam with a score higher than #
-    --expunge             Cause marked for deletion messages to also be deleted
-                          (only useful if --delete is specified)
-    --verbose             Show IMAP stuff happening
-    --spamc               Use spamc instead of standalone SpamAssassin binary
-    --savepw              Store the password to be used in future runs
-    --noninteractive      Prevent interactive requests
-    --ignorelockfile      Don't stop if lock file is present
-    --nostats             Don't print stats
-    --exitcodes           Use different exitcodes (see doc)
+Options:
+    --delete             The spams will be marked for deletion from your inbox
+    --deletehigherthan # Delete any spam with a score higher than #
+    --exitcodes          Use exitcodes to detail  what happened
+    --expunge            Cause marked for deletion messages to also be deleted
+                         (only useful if --delete is specified)
+    --flag               The spams will be flagged in your inbox
+    --help               Show the help screen
+    --ignorelockfile     Don't stop if lock file is present
+    --imaphost hostname  IMAP server name
+    --imaplist           List imap directories
+    --imappasswd passwd  IMAP account password
+    --imapport port      Use a custom port
+    --imapuser username  Who you login as
+    --imapinbox mbox     Name of your inbox folder
+    --learnspambox mbox  Name of your learn spam folder
+    --learnhambox mbox   Name of your learn ham folder
+    --learnthendestroy   Mark learnt messages for deletion
+    --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
+    --lockfilename file  Override the lock file name
+    --maxsize numbytes   Messages larger than this will be ignored as they are
+                         unlikely to be spam
+    --movehamto mbox     Move ham to folder
+    --noninteractive     Prevent interactive requests
+    --noreport           Don't include the SpamAssassin report in the message
+                         copied to your spam folder
+    --nostats            Don't print stats
+    --passwdfilename     Use a file to supply the password
+    --savepw             Store the password to be used in future runs
+    --spamc              Use spamc instead of standalone SpamAssassin binary
+    --spaminbox mbox     Name of your spam folder
+    --ssl                Use SSL to connect to the IMAP server
+    --teachonly          Don't search spam, just learn from folders
+    --verbose            Show IMAP stuff happening
+    --version            Show the version information
 
     (Your inbox will remain untouched unless you specify --flag or --delete)
 </pre>
+
+You can specify your imap password using `--imappasswd`.
+This however is a really bad idea since any user on the system can run `ps` and
+ see the command line arguments. If you really must do it non-interactively
+ then set the password here.
+
 
 ## Do your first run.<a name="Do-your-first-run"></a>
 
@@ -234,6 +249,9 @@ seperate the components.
 The UWash server typically has the folders below Mail and uses
 slash (`/`) to seperate components.
 
+If you don't know how your IMAP folders are implemented, you can always use
+the `--imaplist` option to find out.
+
 # Advanced options<a name="Advanced-options"></a>
 
 If you would like to do something beyond the options listed in the 
@@ -279,7 +297,8 @@ won't be able to see what it is. However, if they study the code to isbg
 recover the original password. (isbg needs the original password each 
 time it is run as well).
 
-Consequently you should regard this as providing minimal protection if someone can read the file.
+Consequently you should regard this as providing minimal protection if
+ someone can read the file.
 
 # SSL<a name="SSL"></a>
 
@@ -300,15 +319,18 @@ When ISBG exits, it uses the exit code to tell you what happened. In
  general it is zero if all went well, and non-zero if there was a 
 problem. You can turn on additional reporting by using the `--exitcodes` 
 command line option.
-<pre>
-code  --exitcodes needed  description
-0         All went well
-1   yes   There was at least one new message, and none of the messages were spam
-2   yes   There was at least one new message, and all messages were spam
-3   yes   There were new messages, with at least one spam and one non-spam
-10        There were errors in the command line arguments
-11        The IMAP server reported an error
-</pre>
+
+|code| `--exitcodes` needed| description|
+|:--:|:-------------------:|:----------:|
+|0 |  no    |All went well|
+|1 |  yes   |There was at least one new message, and none of them were spam|
+|2 |  yes   |There was at least one new message, and all them were spam|
+|3 |  yes   |There were new messages, with at least one spam and one non-spam|
+|10|  no    |There were errors in the command line arguments|
+|11|  no    |The IMAP server reported an error|
+|12|  no    |There was an error of communication between spamc and spamd|
+|20|  no    |The program was not launched in an interactive terminal|
+|30|  no    |There is another instance of `isbg` running|
 
 # Read and Seen flags<a name="Read-and-Seen-flags"></a>
 
