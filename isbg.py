@@ -88,7 +88,7 @@ spaminbox = "INBOX.spam"
 interactive = sys.stdin.isatty()
 maxsize = 120000 # messages larger than this aren't considered
 pastuidsfile = None
-lockfilegrace = 240 
+lockfilegrace = 240
 alreadylearnt = "Message was already un/learned"
 
 # satest is the command that is used to test if the message is spam
@@ -169,7 +169,7 @@ except Exception,e:
 if opts["--delete"] is True:
     addspamflag("\\Deleted")
 
-elif opts["--deletehigherthan"] is not None:
+if opts["--deletehigherthan"] is not None:
     try:
         deletehigherthan = float(opts["--deletehigherthan"])
     except:
@@ -177,34 +177,34 @@ elif opts["--deletehigherthan"] is not None:
     if deletehigherthan < 1:
         errorexit("Score " + `deletehigherthan` + " is too small")
 
-elif opts["--flag"] is True:
+if opts["--flag"] is True:
     addspamflag("\\Flagged")
 
-elif opts["--imaphost"] is not None:
+if opts["--imaphost"] is not None:
     imaphost = opts["--imaphost"]
 
-elif opts["--imappasswd"] is not None:
+if opts["--imappasswd"] is not None:
     imappasswd = opts["--imappasswd"]
 
-elif opts["--imapport"] is not None:
+if opts["--imapport"] is not None:
     imapport = int(opts["--imapport"])
 
 if opts["--imapuser"] is not None:
     imapuser = opts["--imapuser"]
 
-elif opts["--imapinbox"] is not None:
+if opts["--imapinbox"] is not None:
     imapinbox= opts["--imapinbox"]
 
-elif opts["--learnspambox"] is not None:
+if opts["--learnspambox"] is not None:
     learnspambox = opts["--learnspambox"]
 
-elif opts["--learnhambox"] is not None:
+if opts["--learnhambox"] is not None:
     learnhambox = opts["--learnhambox"]
 
-elif opts["--lockfilegrace"] is not None:
+if opts["--lockfilegrace"] is not None:
     lockfilegrace = int(opts["--lockfilegrace"])
 
-elif opts["--maxsize"] is not None:
+if opts["--maxsize"] is not None:
     try:
         maxsize = int(opts["--maxsize"])
     except:
@@ -212,16 +212,16 @@ elif opts["--maxsize"] is not None:
     if maxsize < 1:
         errorexit("Size " + `maxsize` + " is too small")
 
-elif opts["--movehamto"] is not None:
+if opts["--movehamto"] is not None:
     movehamto = opts["--movehamto"]
 
-elif opts["--noninteractive"] is True:
+if opts["--noninteractive"] is True:
     interactive = 0
 
-elif opts["--noreport"] is True:
+if opts["--noreport"] is True:
     noreport = True
 
-elif opts["--spamc"] is True:
+if opts["--spamc"] is True:
     spamc = True
     satest = ["spamc", "-c"]
     sasave = ["spamc"]
@@ -229,8 +229,8 @@ elif opts["--spamc"] is True:
 if opts["--spaminbox"] is not None:
     spaminbox = opts["--spaminbox"]
 
-elif opts["--lockfilename"] is not None:
-    lockfilename = opts["--lockfilename"] 
+if opts["--lockfilename"] is not None:
+    lockfilename = opts["--lockfilename"]
 
 
 # fixup any arguments
@@ -271,7 +271,7 @@ def getpw(data,hash):
             break
         res = res + chr(c)
     return res
-        
+
 def setpw(pw, hash):
     if len(pw) > passwordhashlen:
         raise ValueError("""Password of length %d is too long to
@@ -309,7 +309,7 @@ if opts["--verbose"] is True:
     print("Trackfile is", pastuidsfile)
     print("SpamFlags are", spamflags)
     print("Password file is", passwdfilename)
- 
+
 # Acquire lockfilename or exit
 if opts["--ignorelockfile"] is True:
     if opts["--verbose"] is True:
@@ -336,7 +336,7 @@ if imappasswd is None:
                 print("Successfully read password file")
         except:
             pass
-        
+
     # do we have to prompt?
     if imappasswd is None:
         if not interactive:
@@ -500,7 +500,7 @@ if opts["--teachonly"] is False:
         pass
     # remember what pastuids looked like so that we can compare at the end
     origpastuids = pastuids[:]
-  
+
     # filter away uids that was previously scanned
     uids = [u for u in inboxuids if u not in pastuids]
 
@@ -540,11 +540,11 @@ for u in uids:
         if opts["--verbose"] is True:
             print(u, "is spam")
 
-        if (opts["--deletehigherthan"] is not None and 
+        if (opts["--deletehigherthan"] is not None and
             float(score.split('/')[0]) > deletehigherthan):
             spamdeletelist.append(u)
             continue
-        
+
         # do we want to include the spam report
         if noreport is False:
             # filter it through sa
@@ -593,7 +593,7 @@ if numspam or spamdeleted:
     if opts["--expunge"] is True:
         imap.expunge()
 
-if opts["==teachonly"] is False:
+if opts["--teachonly"] is False:
     # Now tidy up lists of uids
     newpastuids = list(set([u for u in pastuids if u in inboxuids]))
 
