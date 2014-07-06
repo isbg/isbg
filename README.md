@@ -31,7 +31,6 @@ leave it.
 *   [SSL](#SSL)
 *   [Exit Codes](#Exit-Codes)
 *   [Read and Seen flags](#Read-and-Seen-flags)
-*   [Todo list](#Todo-list)
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
@@ -346,14 +345,6 @@ looked at the Inbox, the messages won't be shown as new. It really
 should be using Seen.
 
 The IMAP specification does not permit clients to change the Recent flag.
-
-# Todo list<a name="Todo-list"></a>
-
-*   Auto report messages to Razor (high scoring ones that are definitely spam)
-*   Seperate out messages that may be false positives (scores
- close to SpamAssassin thresholds) from the definite spam ones.
-*   Integrate multiple accounts function to main program
-*   Write program as main()
 
 # Contact and about<a name="Contact-and-about"></a>
 
