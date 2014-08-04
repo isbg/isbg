@@ -81,7 +81,7 @@ except ImportError:
 
 
 imapuser = ''
-imaphost = ''
+imaphost = 'localhost'
 imappasswd = None
 imapinbox = "INBOX"
 spaminbox = "INBOX.spam"
