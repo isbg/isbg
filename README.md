@@ -24,14 +24,13 @@ leave it.
 *   [Do your first run.](#Do-your-first-run)
 *   [Running it](#Running-it)
 *   [Your folder names](#Your-folder-names)
-*   [Advanced options](#Advanced-options)
 *   [How does it work?](#How-does-it-work)
 *   [Multiple accounts](#Multiple-accounts)
 *   [Saving your password](#Saving-your-password)
 *   [SSL](#SSL)
 *   [Exit Codes](#Exit-Codes)
 *   [Read and Seen flags](#Read-and-Seen-flags)
-*   [Todo list](#Todo-list)
+*   [Ignored emails](#Ignored-emails)
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
@@ -87,7 +86,10 @@ it executable (`chmod 555 isbg.py`). It is written in the Python scripting
  language. Python is installed by default on most Linux systems. You can
  can find out more about Python at [www.python.org](http://www.python.org/)
 
-Simply invoke it by whatever name you called the file.
+Simply invoke it by whatever name you called the file. For a better experience,
+you can add a [bash alias](https://wiki.archlinux.org/index.php/Bash#Aliases)
+to your ~/.bashrc file. Here `alias isbg="/path/to/isbg.py"` should do the
+trick.
 
 ## Install in Debian<a name="Install-in-Debian"></a>
 
@@ -252,13 +254,6 @@ slash (`/`) to seperate components.
 If you don't know how your IMAP folders are implemented, you can always use
 the `--imaplist` option to find out.
 
-# Advanced options<a name="Advanced-options"></a>
-
-If you would like to do something beyond the options listed in the 
-usage message above, isbg actually has several more options that can be 
-used. You will easily be able to figure them out from looking in the 
-isbg.py file.
-
 # How does it work?<a name="How-does-it-work"></a>
 
 IMAP assigns each message in a folder a unique id. isbg scans the 
@@ -303,9 +298,7 @@ Consequently you should regard this as providing minimal protection if
 # SSL<a name="SSL"></a>
 
 isbg can do IMAP over SSL if your version of Python has been 
-compiled with SSL support. (Specifically it looks for the function 
-socket.ssl). You can tell if you have ssl support by running `isbg.py 
---help`. If `--ssl` is listed in the options then you have ssl support.
+compiled with SSL support. Since Python 2.6, SSL comes built in with Python.
 
 However you should be aware that the SSL support does NOT check the 
 certificate name nor validate the issuer. If an attacker can intercept 
@@ -345,15 +338,15 @@ Unfortunately this means that if isbg or any other IMAP client has even
 looked at the Inbox, the messages won't be shown as new. It really 
 should be using Seen.
 
-The IMAP specification does not permit clients to change the Recent flag.
+The IMAP specification does not permit clients to change the Recent flag.a
 
-# Todo list<a name="Todo-list"></a>
+# Ignored emails<a name="Ignored-emails"></a>
 
-*   Auto report messages to Razor (high scoring ones that are definitely spam)
-*   Seperate out messages that may be false positives (scores
- close to SpamAssassin thresholds) from the definite spam ones.
-*   Integrate multiple accounts function to main program
-*   Write program as main()
+By default, isbg ignores emails that are bigger than 120000 bytes since spam
+are not often that big. If you ever get emails with score of 0 on 5 (0.0/5.0),
+ it is likely that SpamAssassin is skipping it due to size.
+
+Defaut maximum size can be changed with the use of the `--maxsize` option.
 
 # Contact and about<a name="Contact-and-about"></a>
 
