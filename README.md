@@ -298,7 +298,7 @@ Consequently you should regard this as providing minimal protection if
 # SSL<a name="SSL"></a>
 
 isbg can do IMAP over SSL if your version of Python has been 
-compiled with SSL support. Since Python 2.6, SSL come built in with Python.
+compiled with SSL support. Since Python 2.6, SSL comes built in with Python.
 
 However you should be aware that the SSL support does NOT check the 
 certificate name nor validate the issuer. If an attacker can intercept 
