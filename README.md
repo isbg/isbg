@@ -30,6 +30,7 @@ leave it.
 *   [SSL](#SSL)
 *   [Exit Codes](#Exit-Codes)
 *   [Read and Seen flags](#Read-and-Seen-flags)
+#   [Ignored emails](#Ignored-emails)
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
