@@ -344,7 +344,7 @@ The IMAP specification does not permit clients to change the Recent flag.a
 
 By default, isbg ignores emails that are bigger than 120000 bytes since spam
 are not often that big. If you ever get emails with score of 0 on 5 (0.0/5.0)
-it is likely that SpamAssassin is skipping it due to size.
+, it is likely that SpamAssassin is skipping it due to size.
 
 Defaut maximum size can be changed with the use of the `--maxsize` option.
 
