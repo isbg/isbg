@@ -86,7 +86,10 @@ it executable (`chmod 555 isbg.py`). It is written in the Python scripting
  language. Python is installed by default on most Linux systems. You can
  can find out more about Python at [www.python.org](http://www.python.org/)
 
-Simply invoke it by whatever name you called the file.
+Simply invoke it by whatever name you called the file. For a better experience,
+you can add a [bash alias](https://wiki.archlinux.org/index.php/Bash#Aliases)
+to your ~/.bashrc file. Here `alias isbg="/path/to/isbg.py"` should do the
+trick.
 
 ## Install in Debian<a name="Install-in-Debian"></a>
 
