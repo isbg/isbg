@@ -297,9 +297,7 @@ Consequently you should regard this as providing minimal protection if
 # SSL<a name="SSL"></a>
 
 isbg can do IMAP over SSL if your version of Python has been 
-compiled with SSL support. (Specifically it looks for the function 
-socket.ssl). You can tell if you have ssl support by running `isbg.py 
---help`. If `--ssl` is listed in the options then you have ssl support.
+compiled with SSL support.
 
 However you should be aware that the SSL support does NOT check the 
 certificate name nor validate the issuer. If an attacker can intercept 
@@ -339,7 +337,15 @@ Unfortunately this means that if isbg or any other IMAP client has even
 looked at the Inbox, the messages won't be shown as new. It really 
 should be using Seen.
 
-The IMAP specification does not permit clients to change the Recent flag.
+The IMAP specification does not permit clients to change the Recent flag.a
+
+# Ignored emails<a name="Ignored-emails"></a>
+
+By default, isbg ignores emails that are bigger than 120000 bytes since spam
+are not often that big. If you ever get emails with score of 0 on 5 (0.0/5.0)
+it is likely that SpamAssassin is skipping it due to size.
+
+Defaut maximum size can be changed with the use of the `--maxsize` option.
 
 # Contact and about<a name="Contact-and-about"></a>
 
