@@ -4,7 +4,7 @@
 from setuptools import setup
 import os
 
-ldesc = open(os.path.join(os.path.dirname(__file__), 'README')).read()
+ldesc = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
 setup(
 	name='isbg',
