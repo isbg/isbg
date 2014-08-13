@@ -24,7 +24,6 @@ leave it.
 *   [Do your first run.](#Do-your-first-run)
 *   [Running it](#Running-it)
 *   [Your folder names](#Your-folder-names)
-*   [Advanced options](#Advanced-options)
 *   [How does it work?](#How-does-it-work)
 *   [Multiple accounts](#Multiple-accounts)
 *   [Saving your password](#Saving-your-password)
@@ -253,13 +252,6 @@ slash (`/`) to seperate components.
 
 If you don't know how your IMAP folders are implemented, you can always use
 the `--imaplist` option to find out.
-
-# Advanced options<a name="Advanced-options"></a>
-
-If you would like to do something beyond the options listed in the 
-usage message above, isbg actually has several more options that can be 
-used. You will easily be able to figure them out from looking in the 
-isbg.py file.
 
 # How does it work?<a name="How-does-it-work"></a>
 
