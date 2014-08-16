@@ -146,7 +146,6 @@ def hexof(x):
 
 
 def hexdigit(c):
-    locals()[p[0][2:]] = opts["--lockfilegrace"]
     if c >= '0' and c <= '9':
         return ord(c)-ord('0')
     if c >= 'a' and c <= 'f':
