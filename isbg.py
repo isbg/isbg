@@ -474,7 +474,7 @@ if opts["--learnhambox"] is not None:
         if not out.strip() == alreadylearnt: h_learnt += 1
         if opts["--verbose"] is True:
             print(u, out)
-        if opts["movehamto"] is not None:
+        if opts["--movehamto"] is not None:
             res = imap.uid("COPY", u, movehamto)
             assertok(res, "uid copy", u, movehamto)
         if opts["--learnthendestroy"] or opts["--movehamto"] is not None:
