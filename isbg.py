@@ -486,9 +486,6 @@ if opts["--learnhambox"] is not None:
             res = imap.uid("COPY", u, movehamto)
             assertok(res, "uid copy", u, movehamto)
         if opts["--learnthendestroy"] or opts["--movehamto"] is not None:
-            # Not chekcing for --gmail here; we will just remove the 'label'
-            # by doing a delete. Do not move to the trash to remove all labels
-            # because we want to save this ham!
             res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
             assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
     if opts["--expunge"] is True or opts["--movehamto"] is not None:
