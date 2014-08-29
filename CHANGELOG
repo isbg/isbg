@@ -7,6 +7,7 @@ What has been done since last release
   * New command --imaplist lists the directories in IMAP account (to polish)
   * Code now follows PEP-8 style guide
   * Renamed variables to be consistent
+  * Added gmail integration (thanks to Orkim!)
 
 0.99 (20100303)
 ===============
