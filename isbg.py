@@ -23,6 +23,7 @@ Options:
     --expunge            Cause marked for deletion messages to also be deleted
                          (only useful if --delete is specified)
     --flag               The spams will be flagged in your inbox
+    --gmail              Delete by copying to '[Gmail]/Trash' folder
     --help               Show the help screen
     --ignorelockfile     Don't stop if lock file is present
     --imaphost hostname  IMAP server name
@@ -170,7 +171,10 @@ except Exception, e:
     errorexit("Option processing failed - " + str(e))
 
 if opts["--delete"] is True:
-    addspamflag("\\Deleted")
+    if opts["--gmail"] is True:
+        pass
+    else:
+        addspamflag("\\Deleted")
 
 if opts["--deletehigherthan"] is not None:
     try:
@@ -445,8 +449,12 @@ if opts["--learnspambox"] is not None:
         if opts["--verbose"] is True:
             print(u, out)
         if opts["--learnthendestroy"] is True:
-            res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-            assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+            if opts["--gmail"] is True:
+                res = imap.uid("COPY", u, "[Gmail]/Trash")
+                assertok(res, "uid copy", u, "[Gmail]/Trash")
+            else:
+                res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+                assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
     if opts["--expunge"] is True:
         imap.expunge()
 
@@ -596,10 +604,19 @@ if numspam or spamdeleted:
             res = imap.uid("STORE", u, spamflagscmd, spamflags)
             assertok(res, "uid store", u, spamflagscmd, spamflags)
             pastuids.append(u)
+    # If its gmail, and --delete was passed, we actually copy!
+    if opts["--delete"] is True and opts["--gmail"] is True:
+        for u in spamlist:
+            res = imap.uid("COPY", u, "[Gmail]/Trash")
+            assertok(res, "uid copy", u, "[Gmail]/Trash")
     # Set deleted flag for spam with high score
     for u in spamdeletelist:
-        res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
-        assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+        if opts["--gmail"] is True:
+            res = imap.uid("COPY", u, "[Gmail]/Trash")
+            assertok(res, "uid copy", u, "[Gmail]/Trash")
+        else:
+            res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
+            assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
     if opts["--expunge"] is True:
         imap.expunge()
 
