@@ -168,6 +168,7 @@ Options:
     --expunge            Cause marked for deletion messages to also be deleted
                          (only useful if --delete is specified)
     --flag               The spams will be flagged in your inbox
+    --gmail		 Delete by copying to '[Gmail]/Trash' folder 
     --help               Show the help screen
     --ignorelockfile     Don't stop if lock file is present
     --imaphost hostname  IMAP server name
