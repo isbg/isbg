@@ -344,44 +344,45 @@ The IMAP specification does not permit clients to change the Recent flag.a
 # Gmail Integration<a name="Gmail-Integration"></a>
 
 Gmail has a few unique ways that they interact with a mail client. isbg must
-be condisdered to be a client due to interacting with the Gmail servers over
+be considered to be a client due to interacting with the Gmail servers over
 IMAP, and thus, should conform to these special requirements for propper
 integration.
 
 There are two types of deletion on a Gmail server.
 
-Type 1: Move a message to '[Gmail]/Trash' folder.
+**Type 1: Move a message to '[Gmail]/Trash' folder.**
 
-This 'removes all lables' from the message. It will no longer appear in any
-folders, except there will be a single copy located in the trash folder.
-Gmail will 'empty the trash' after the received email message is 30 days old.
+This "removes all labels" from the message. It will no longer appear in any
+folders and there will be a single copy located in the trash folder.
+Gmail will "empty the trash" after the received email message is 30 days old.
+
 You can also do a "Normal IMAP delete" on the message in the trash folder to
-cause it to be removed permanantly without waiting 30 days.
+cause it to be removed permanently without waiting 30 days.
 
-Type 2: Normal IMAP delete flag applied to a message.
+**Type 2: Normal IMAP delete flag applied to a message.**
 
-This will 'remove a single label' from a message. It will no longer appear
+This will "remove a single label" from a message. It will no longer appear
 in the folder it was removed from but will remain in other folders and also
-in the 'All Mail' folder.
+in the "All Mail" folder.
 
-Enable Gmail integration mode by passing --gmail on the command line when
-invoking isbg.  These are the features which are tweaked:
+Enable Gmail integration mode by passing `--gmail` in conjunction with
+`--delete` on the command line when invoking isbg. These are the features
+which are tweaked:
 
-- The --delete command line switch will be modified so that it will result in
-  a 'Type 1' delete.
+- The `--delete` command line switch will be modified so that it will result in
+  a Type 1 delete.
 
-- The --deletehigherthan command line switch will be modified so that it will
-  results in a 'Type 1' delete.
+- The `--deletehigherthan` command line switch will be modified so that it will
+  results in a Type 1 delete.
 
-- If --learnspambox is used along with the --learnthendestroy option, then a
-  'Type 1' delete occurs leaving only a copy of the spam in the Trash.
+- If `--learnspambox` is used along with the `--learnthendestroy` option, then a
+  Type 1 delete occurs leaving only a copy of the spam in the Trash.
 
-- If --learnhambox is used along with the --learnthendestroy option, then a
-  'Type 2' delete occurs, only removing the single label.
+- If `--learnhambox` is used along with the `--learnthendestroy` option, then a
+  Type 2 delete occurs, only removing the single label.
 
-Reference information was taken from here:
-
-https://support.google.com/mail/answer/78755?hl=en
+Reference information was taken from
+[here](https://support.google.com/mail/answer/78755?hl=en)
 
 # Ignored emails<a name="Ignored-emails"></a>
 
