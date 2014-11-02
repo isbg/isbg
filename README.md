@@ -286,7 +286,7 @@ you can specify the `--savepw` option. This will save the password in a
 file in your home directory. The file is named `.isbg-XXXX` where XXXX is a
  16 byte identifier based on the IMAP host, username and port number 
 (the same as for the multiple accounts description above). You can 
-override the filename with `--passwordfilename`.
+override the filename with `--passwdfilename`.
 
 The password is obfuscated, so anyone just looking at the contents 
 won't be able to see what it is. However, if they study the code to isbg
