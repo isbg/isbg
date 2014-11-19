@@ -140,7 +140,7 @@ by:
 OPTIONS="-D --allow-tell --create-prefs --max-children 5 --helper-home-dir" 
 </pre>
 
-Don't forget to restart you're spamd server after that
+Don't forget to restart your spamd server after that
  (`sudo service spamassassin restart` on Debian).
 
 
