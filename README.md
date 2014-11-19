@@ -276,8 +276,10 @@ Consequently you can just run isbg against different servers/accounts
 and it will automatically keep the tracked UIDs seperate. You can 
 override the filename with `--trackfile`.
 
-To run isbg for multiple accounts one after another, it is possible to use a
-bash script like the one in the git repository called `multiple_accounts.sh`.
+To run isbg for multiple accounts one after another, it is possible to use 
+bash scripts like the ones in the folder "bash_scripts". Since these scripts
+contain passwords and are thus sensitive data, make sure the file permissions
+are very restrictive.
 
 # Saving your password<a name="Saving-your-password"></a>
 

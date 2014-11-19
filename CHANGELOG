@@ -8,6 +8,7 @@ What has been done since last release
   * Code now follows PEP-8 style guide
   * Renamed variables to be consistent
   * Added gmail integration (thanks to Orkim!)
+  * Added bash scripts for use with multiple accounts
 
 0.99 (20100303)
 ===============
