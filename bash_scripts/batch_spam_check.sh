@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # This bash script calls isbg for spam checking for all the mail accounts
 # in the provided list.
