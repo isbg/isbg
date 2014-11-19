@@ -12,6 +12,4 @@
   security)
 * Seperate out messages that may be false positives (scores
   close to SpamAssassin thresholds) from the definite spam ones.
-* Integrate multiple accounts function to main program
-    * a conf file in the working dir by default (/etc/isbg/ in Debian)
-    * no encryption (too complicated atm, but would be nice)
+* Stop using working dir as cache
