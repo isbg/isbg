@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
@@ -16,14 +16,14 @@ setup(
 	author_email='thomas@lecavelier.name',
 	license='See LICENCE file.',
 	scripts=['isbg.py'],
-  url='http://redmine.ookook.fr/projects/isbg/wiki',
+	url='http://redmine.ookook.fr/projects/isbg/wiki',
 	classifiers=[
 		'Development Status :: 5 - Production/Stable',
 		'Environment :: Console',
 		'Intended Audience :: System Administrators',
 		'Intended Audience :: End Users/Desktop',
 		'License :: OSI Approved',
-		'Programming Language :: Python',
+		'Programming Language :: Python :: 2 :: Only',
 		'Topic :: Communications :: Email :: Post-Office :: IMAP',
 		'Topic :: Communications :: Email :: Filters',
 		'Topic :: Utilities',

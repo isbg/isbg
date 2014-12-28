@@ -140,7 +140,7 @@ by:
 OPTIONS="-D --allow-tell --create-prefs --max-children 5 --helper-home-dir" 
 </pre>
 
-Don't forget to restart you're spamd server after that
+Don't forget to restart your spamd server after that
  (`sudo service spamassassin restart` on Debian).
 
 
@@ -276,8 +276,10 @@ Consequently you can just run isbg against different servers/accounts
 and it will automatically keep the tracked UIDs seperate. You can 
 override the filename with `--trackfile`.
 
-To run isbg for multiple accounts one after another, it is possible to use a
-bash script like the one in the git repository called `multiple_accounts.sh`.
+To run isbg for multiple accounts one after another, it is possible to use 
+bash scripts like the ones in the folder "bash_scripts". Since these scripts
+contain passwords and are thus sensitive data, make sure the file permissions
+are very restrictive.
 
 # Saving your password<a name="Saving-your-password"></a>
 
@@ -286,7 +288,7 @@ you can specify the `--savepw` option. This will save the password in a
 file in your home directory. The file is named `.isbg-XXXX` where XXXX is a
  16 byte identifier based on the IMAP host, username and port number 
 (the same as for the multiple accounts description above). You can 
-override the filename with `--passwordfilename`.
+override the filename with `--passwdfilename`.
 
 The password is obfuscated, so anyone just looking at the contents 
 won't be able to see what it is. However, if they study the code to isbg
