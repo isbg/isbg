@@ -418,10 +418,9 @@ res = imap.login(imapuser, imappasswd)
 assertok(res, "login", imapuser, 'xxxxxxxx')
 
 # List imap directories
-# TODO Format output
 if opts["--imaplist"] is True:
     imap_list = str(imap.list())
-    imap_list = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",imap_list)
+    imap_list = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",imap_list) # string formatting
     print(imap_list)
 
 # Spamassassin training
