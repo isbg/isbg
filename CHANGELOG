@@ -10,6 +10,7 @@ What has been done since last release
   * Added gmail integration (thanks to Orkim!)
   * Added bash scripts for use with multiple accounts
   * SSL is now used by default and "--ssl" parameter is now a "--nossl" parameter
+  * New command "--trackfile" now permits trackfile name configuration (thanks naevtamarkus!)
 
 0.99 (20100303)
 ===============
