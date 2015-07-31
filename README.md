@@ -182,7 +182,6 @@ Options:
     --learnthendestroy   Mark learnt messages for deletion
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename file  Override the lock file name
-    --trackfile file     Overrise the track file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
                          unlikely to be spam
     --movehamto mbox     Move ham to folder
@@ -194,8 +193,9 @@ Options:
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
     --spaminbox mbox     Name of your spam folder
-    --ssl                Use SSL to connect to the IMAP server
+    --nossl              Don't use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
+    --trackfile file     Override the trackfile name
     --verbose            Show IMAP stuff happening
     --version            Show the version information
 
