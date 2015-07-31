@@ -48,7 +48,7 @@ Options:
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
     --spaminbox mbox     Name of your spam folder
-    --ssl                Use SSL to connect to the IMAP server
+    --nossl              Don't use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
     --verbose            Show IMAP stuff happening
     --version            Show the version information
@@ -246,10 +246,10 @@ if spamflags[-1] != ')':
     spamflags = spamflags + ')'
 
 if opts["--imapport"] is None:
-    if opts["--ssl"] is True:
-        imapport = 993
-    else:
+    if opts["--nossl"] is True:
         imapport = 143
+    else:
+        imapport = 993
 
 if pastuidsfile is None:
     pastuidsfile = os.path.expanduser("~" + os.sep + ".isbg-track")
@@ -408,10 +408,10 @@ def assertok(res, *args):
 
 # Main code starts here
 
-if opts["--ssl"] is True:
-    imap = imaplib.IMAP4_SSL(imaphost, imapport)
-else:
+if opts["--nossl"] is True:
     imap = imaplib.IMAP4(imaphost, imapport)
+else:
+    imap = imaplib.IMAP4_SSL(imaphost, imapport)
 
 # Authenticate (only simple supported)
 res = imap.login(imapuser, imappasswd)
