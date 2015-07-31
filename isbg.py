@@ -51,6 +51,7 @@ Options:
     --spaminbox mbox     Name of your spam folder
     --ssl                Use SSL to connect to the IMAP server
     --teachonly          Don't search spam, just learn from folders
+    --partialrun num     Stop operation after scanning 'num' unseen emails
     --verbose            Show IMAP stuff happening
     --version            Show the version information
 
@@ -125,6 +126,7 @@ uidfetchbatchsize = 25
 passwdfilename = None
 passwordhash = None
 passwordhashlen = 256  # should be a multiple of 16
+partialrun = None
 
 
 def errorexit(msg, exitcode=exitcodeflags):
@@ -242,6 +244,9 @@ if opts["--lockfilename"] is not None:
 
 if opts["--trackfile"] is not None:
     pastuidsfile = opts["--trackfile"]
+
+if opts["--partialrun"] is not None:
+    partialrun = opts["--partialrun"]
 
 # fixup any arguments
 
@@ -525,6 +530,10 @@ if opts["--teachonly"] is False:
 
     # filter away uids that was previously scanned
     uids = [u for u in inboxuids if u not in pastuids]
+
+    # Take only X elements if partialrun is enabled
+    if partialrun is not None:
+        uids = uids[:int(partialrun)]
 
 # Keep track of new spam uids
 spamlist = []

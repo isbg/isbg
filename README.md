@@ -396,6 +396,16 @@ are not often that big. If you ever get emails with score of 0 on 5 (0.0/5.0),
 
 Defaut maximum size can be changed with the use of the `--maxsize` option.
 
+# Partial runs<a name="Partial-runs"></a>
+
+By default, isbg scans the whole inbox folder. If you want to restrict the number
+of emails that are scanned, you can use the `--partialrun` option specifying the 
+number of unseen (not scanned before) emails you want to check.
+
+This may be useful when your inbox has a lot of emails, since deletion and mail
+tracking are only performed at the end of the run and full scans can take too
+long.
+
 # Contact and about<a name="Contact-and-about"></a>
 
 This software was written by Roger Binns 
