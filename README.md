@@ -182,6 +182,7 @@ Options:
     --learnthendestroy   Mark learnt messages for deletion
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename file  Override the lock file name
+    --trackfile file     Overrise the track file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
                          unlikely to be spam
     --movehamto mbox     Move ham to folder
