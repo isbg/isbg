@@ -9,6 +9,7 @@ What has been done since last release
   * Renamed variables to be consistent
   * Added gmail integration (thanks to Orkim!)
   * Added bash scripts for use with multiple accounts
+  * SSL is now used by default and "--ssl" parameter is now a "--nossl" parameter
 
 0.99 (20100303)
 ===============
