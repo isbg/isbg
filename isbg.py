@@ -44,6 +44,7 @@ Options:
     --noreport           Don't include the SpamAssassin report in the message
                          copied to your spam folder
     --nostats            Don't print stats
+    --partialrun num     Stop operation after scanning 'num' unseen emails
     --passwdfilename     Use a file to supply the password
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
@@ -125,6 +126,7 @@ uidfetchbatchsize = 25
 passwdfilename = None
 passwordhash = None
 passwordhashlen = 256  # should be a multiple of 16
+partialrun = None
 
 
 def errorexit(msg, exitcode=exitcodeflags):
@@ -242,6 +244,9 @@ if opts["--lockfilename"] is not None:
 
 if opts["--trackfile"] is not None:
     pastuidsfile = opts["--trackfile"]
+
+if opts["--partialrun"] is not None:
+    partialrun = opts["--partialrun"]
 
 # fixup any arguments
 
@@ -525,6 +530,10 @@ if opts["--teachonly"] is False:
 
     # filter away uids that was previously scanned
     uids = [u for u in inboxuids if u not in pastuids]
+
+    # Take only X elements if partialrun is enabled
+    if partialrun is not None:
+        uids = uids[:int(partialrun)]
 
 # Keep track of new spam uids
 spamlist = []
