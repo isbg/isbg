@@ -11,6 +11,7 @@ What has been done since last release
   * Added bash scripts for use with multiple accounts
   * SSL is now used by default and "--ssl" parameter is now a "--nossl" parameter
   * New command "--trackfile" now permits trackfile name configuration (thanks naevtamarkus!)
+  * New command "--partialrun" now enable isbg to run for only a few emails (thanks naevtamarkus!)
 
 0.99 (20100303)
 ===============

@@ -13,3 +13,4 @@
 * Seperate out messages that may be false positives (scores
   close to SpamAssassin thresholds) from the definite spam ones.
 * Stop using working dir as cache
+* Set a 50 emails partial run defaut and loop it
