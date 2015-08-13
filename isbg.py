@@ -75,7 +75,6 @@ import getpass
 import string
 import time
 import atexit
-import config
 
 try:
     from hashlib import md5
