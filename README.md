@@ -32,6 +32,7 @@ leave it.
 *   [Read and Seen flags](#Read-and-Seen-flags)
 *   [Gmail Integration](#Gmail-Integration)
 *   [Ignored emails](#Ignored-emails)
+*   [Partial runs](#Partial-runs)
 *   [Contact and about](#Contact-and-about)
 *   [License](#License)
 
@@ -188,7 +189,8 @@ Options:
     --noninteractive     Prevent interactive requests
     --noreport           Don't include the SpamAssassin report in the message
                          copied to your spam folder
-    --nostats            Don't print stats
+    --nostats            Don't print stat
+    --partialrun num     Stop operation after scanning 'num' unseen emails
     --passwdfilename     Use a file to supply the password
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
