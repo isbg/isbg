@@ -75,6 +75,7 @@ import getpass
 import string
 import time
 import atexit
+import config
 
 try:
     from hashlib import md5
@@ -247,6 +248,8 @@ if opts["--trackfile"] is not None:
 
 if opts["--partialrun"] is not None:
     partialrun = opts["--partialrun"]
+    if partialrun < 1:
+        errorexit("Partial run number must be equal to 1 or higher")
 
 # fixup any arguments
 
