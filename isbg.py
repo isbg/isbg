@@ -488,7 +488,7 @@ if opts["--learnhambox"] is not None:
             continue
         code = p.returncode
         if code == 69 or code == 74:
-            errorexit("spamd is missconfigured (use --allow-tell)")
+            errorexit("spamd is misconfigured (use --allow-tell)")
         p.stdin.close()
         if not out.strip() == alreadylearnt: h_learnt += 1
         if opts["--verbose"] is True:
