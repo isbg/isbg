@@ -10,9 +10,8 @@ perfect tool to take good care of your ISP mailbox without having to
 leave it.
 
 *   [Features](#Features)
-*   [New in 0.99](#New-in-099)
+*   [New in 1.00](#New-in-100)
 *   [Bugs](#Bugs)
-*   [Does it work?](#Does-it-work)
 *   [Installation](#Installation)
 	*   [Install from source](#Install-from-source)
 	*   [Install in Debian](#Install-in-Debian)
@@ -53,25 +52,22 @@ on any machine that can contact your IMAP server
 *   Lock file to prevent multiple instance to run at the same time 
 (for cron jobs)
 
-## New in 0.99<a name="New-in-099"></a>
+## New in 1.00<a name="New-in-100"></a>
 
-*   Drastic performance enhancement (up to 1000x speeder!)
-*   Lock file to prevent multiple instance to run at the same time
- (for cron jobs)
-*   SSL fixed
-*   Don't fail when meeting horrible and bad formed mail
-*   Remember mails teached as Spam and Ham
-*   Automatically delete mail with very high spam score
+**DEPRECATION NOTICE: if you used the "--ssl" parameter in 0.99, you now
+need to stop using it! SSL is now used by default. If you want not to use
+it, please use the "--nossl" parameter.**
 
-
-# Does it work?<a name="Does-it-work"></a>
-
-Yes, very well. It has been filtering my work email, some of which 
-comes from a legacy email address that is from a spam unfiltered system.
- I run it as a cronjob every 15 minutes, and have had it doing that for 6
- months. I get about 500 spams a month. Many other users have been using
- it for a variety of servers from a variety of platforms.
-There are no known outstanding bugs.
+  * The CLI interface is now implemented with docopt
+  * The README now includes the documentation
+  * New command --imaplist lists the directories in IMAP account
+  * Code now follows PEP-8 style guide
+  * Renamed variables to be consistent
+  * Added gmail integration (thanks to Orkim!)
+  * Added bash scripts for use with multiple accounts
+  * SSL is now used by default and "--ssl" parameter is now a "--nossl" parameter
+  * New command "--trackfile" now permits trackfile name configuration (thanks naevtamarkus!)
+  * New command "--partialrun" now enable isbg to run for only a few emails (thanks naevtamarkus!)
 
 # Installation<a name="Installation"></a>
 
