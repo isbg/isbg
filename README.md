@@ -11,7 +11,6 @@ leave it.
 
 *   [Features](#Features)
 *   [New in 1.00](#New-in-100)
-*   [Bugs](#Bugs)
 *   [Installation](#Installation)
 	*   [Install from source](#Install-from-source)
 	*   [Install in Debian](#Install-in-Debian)
