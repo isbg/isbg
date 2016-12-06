@@ -35,6 +35,7 @@ Options:
     --learnspambox mbox  Name of your learn spam folder
     --learnhambox mbox   Name of your learn ham folder
     --learnthendestroy   Mark learnt messages for deletion
+    --learnthenflag      Flag learnt messages
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename file  Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
@@ -466,6 +467,9 @@ if opts["--learnspambox"] is not None:
             else:
                 res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
                 assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+        if opts["--learnthenflag"] is True:
+                res = imap.uid("STORE", u, spamflagscmd, "(\\Flagged)")
+                assertok(res, "uid store", u, spamflagscmd, "(\\Flagged)")
     if opts["--expunge"] is True:
         imap.expunge()
 
@@ -499,6 +503,9 @@ if opts["--learnhambox"] is not None:
         if opts["--learnthendestroy"] or opts["--movehamto"] is not None:
             res = imap.uid("STORE", u, spamflagscmd, "(\\Deleted)")
             assertok(res, "uid store", u, spamflagscmd, "(\\Deleted)")
+        if opts["--learnthenflag"] is True:
+                res = imap.uid("STORE", u, spamflagscmd, "(\\Flagged)")
+                assertok(res, "uid store", u, spamflagscmd, "(\\Flagged)")
     if opts["--expunge"] is True or opts["--movehamto"] is not None:
         imap.expunge()
 
