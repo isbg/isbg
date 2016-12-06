@@ -36,6 +36,7 @@ Options:
     --learnhambox mbox   Name of your learn ham folder
     --learnthendestroy   Mark learnt messages for deletion
     --learnthenflag      Flag learnt messages
+    --learnunflagged     Only learn if unflagged (for --learnthenflag)
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename file  Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
@@ -442,7 +443,10 @@ if opts["--learnspambox"] is not None:
     assertok(res, 'select', learnspambox)
     s_tolearn = int(res[1][0])
     s_learnt = 0
-    typ, uids = imap.uid("SEARCH", None, "ALL")
+    if opts["--learnunflagged"]:
+        typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
+    else:
+        typ, uids = imap.uid("SEARCH", None, "ALL")
     uids = uids[0].split()
     for u in uids:
         body = getmessage(u)
@@ -480,7 +484,10 @@ if opts["--learnhambox"] is not None:
     assertok(res, 'select', learnhambox)
     h_tolearn = int(res[1][0])
     h_learnt = 0
-    typ, uids = imap.uid("SEARCH", None, "ALL")
+    if opts["--learnunflagged"]:
+        typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
+    else:
+        typ, uids = imap.uid("SEARCH", None, "ALL")
     uids = uids[0].split()
     for u in uids:
         body = getmessage(u)
