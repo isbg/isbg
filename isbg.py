@@ -55,6 +55,7 @@ Options:
     --teachonly          Don't search spam, just learn from folders
     --trackfile file     Override the trackfile name
     --verbose            Show IMAP stuff happening
+    --verbose-mails      Show mail bodies (extra-verbose)
     --version            Show the version information
 
     (Your inbox will remain untouched unless you specify --flag or --delete)
@@ -407,11 +408,27 @@ def crnlify(text):
     # the char preceding \n
     return re.sub(crnlre, "\\1\r\n", re.sub(crnlre, "\\1\r\n", text))
 
+def truncate(inp, length):
+    if len(inp) > length:
+        return repr(inp)[:length-3] + '...'
+    else:
+        return inp
+
+def shorten(inp, length):
+    if isinstance(inp, dict):
+        return dict([(k, shorten(v, length)) for k,v in inp.items()])
+    elif isinstance(inp, list) or isinstance(inp, tuple):
+        return [ shorten(x, length) for x in inp]
+    else:
+        return truncate(inp, length)
 
 # This function checks that the return code is OK
 # It also prints out what happened (which would end
 # up /dev/null'ed in non-verbose mode)
 def assertok(res, *args):
+    if 'fetch' in args[0] and not opts["--verbose-mails"] is True:
+        res = shorten(res, 100)
+
     if opts["--verbose"] is True:
         print(repr(args), "=", res)
     if res[0] != "OK":
