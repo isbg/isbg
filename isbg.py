@@ -441,13 +441,13 @@ if opts["--learnspambox"] is not None:
         print("Teach SPAM to SA from:", learnspambox)
     res = imap.select(learnspambox, 0)
     assertok(res, 'select', learnspambox)
-    s_tolearn = int(res[1][0])
     s_learnt = 0
     if opts["--learnunflagged"]:
         typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
     else:
         typ, uids = imap.uid("SEARCH", None, "ALL")
     uids = uids[0].split()
+    s_tolearn = len(uids)
     for u in uids:
         body = getmessage(u)
         p = Popen(["spamc", "--learntype=spam"],
@@ -482,13 +482,13 @@ if opts["--learnhambox"] is not None:
         print("Teach HAM to SA from:", learnhambox)
     res = imap.select(learnhambox, 0)
     assertok(res, 'select', learnhambox)
-    h_tolearn = int(res[1][0])
     h_learnt = 0
     if opts["--learnunflagged"]:
         typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
     else:
         typ, uids = imap.uid("SEARCH", None, "ALL")
     uids = uids[0].split()
+    h_tolearn = len(uids)
     for u in uids:
         body = getmessage(u)
         p = Popen(["spamc", "--learntype=ham"],
