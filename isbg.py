@@ -214,9 +214,9 @@ class ISBG:
     # Retrieve the entire message
     def getmessage(self, uid, append_to=None):
         res = self.imap.uid("FETCH", uid, "(RFC822)")
-        assertok(res, 'uid fetch', uid, '(RFC822)')
+        self.assertok(res, 'uid fetch', uid, '(RFC822)')
         if res[0] != "OK":
-            assertok(res, 'uid fetch', uid, '(RFC822)')
+            self.assertok(res, 'uid fetch', uid, '(RFC822)')
             try:
                 body = res[1][0][1]
             except:
@@ -265,6 +265,8 @@ class ISBG:
                 errorexit("Unrecognized score - " + self.opts["--deletehigherthan"], self.exitcodeflags)
             if self.deletehigherthan < 1:
                 errorexit("Score " + repr(self.deletehigherthan) + " is too small", self.exitcodeflags)
+        else:
+            self.deletehigherthan = None
 
         if self.opts["--flag"] is True:
             self.spamflags.append("\\Flagged")
@@ -434,7 +436,7 @@ class ISBG:
 
         # Authenticate (only simple supported)
         res = self.imap.login(self.imapuser, self.imappasswd)
-        assertok(res, "login", self.imapuser, 'xxxxxxxx')
+        self.assertok(res, "login", self.imapuser, 'xxxxxxxx')
 
         # List imap directories
         if self.imaplist:
@@ -447,7 +449,7 @@ class ISBG:
             if self.verbose:
                 print("Teach SPAM to SA from:", self.learnspambox)
             res = self.imap.select(self.learnspambox, 0)
-            assertok(res, 'select', self.learnspambox)
+            self.assertok(res, 'select', self.learnspambox)
             s_learnt = 0
             if self.learnunflagged:
                 typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
@@ -474,13 +476,13 @@ class ISBG:
                 if self.learnthendestroy is True:
                     if self.gmail:
                         res = self.imap.uid("COPY", u, "[Gmail]/Trash")
-                        assertok(res, "uid copy", u, "[Gmail]/Trash")
+                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
                     else:
                         res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
-                        assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
                 if opts["--learnthenflag"] is True:
                         res = imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
-                        assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
             if self.expunge:
                 self.imap.expunge()
 
@@ -488,7 +490,7 @@ class ISBG:
             if self.verbose:
                 print("Teach HAM to SA from:", self.learnhambox)
             res = imap.select(self.learnhambox, 0)
-            assertok(res, 'select', self.learnhambox)
+            self.assertok(res, 'select', self.learnhambox)
             h_learnt = 0
             if self.learnunflagged:
                 typ, uids = self.imap.uid("SEARCH", None, "UNFLAGGED")
@@ -513,13 +515,13 @@ class ISBG:
                     print(u, out)
                 if self.movehamto is not None:
                     res = imap.uid("COPY", u, movehamto)
-                    assertok(res, "uid copy", u, movehamto)
+                    self.assertok(res, "uid copy", u, movehamto)
                 if self.learnthendestroy or self.movehamto is not None:
                     res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
-                    assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
+                    self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
                 if self.learnthenflag:
                         res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
-                        assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
             if self.expunge or self.movehamto is not None:
                 self.imap.expunge()
 
@@ -532,7 +534,7 @@ class ISBG:
 
             # select inbox
             res = self.imap.select(self.imapinbox, 1)
-            assertok(res, 'select', self.imapinbox, 1)
+            self.assertok(res, 'select', self.imapinbox, 1)
 
             # get the uids of all mails with a size less then the maxsize
             typ, inboxuids = self.imap.uid("SEARCH", None, "SMALLER", self.maxsize)
@@ -559,11 +561,19 @@ class ISBG:
             if self.partialrun is not None:
                 uids = uids[:int(self.partialrun)]
 
+        if self.verbose:
+            print('Got {} mails to check'.format(len(uids)))
+
         # Keep track of new spam uids
         spamlist = []
 
         # Keep track of spam that is to be deleted
         spamdeletelist = []
+
+        if self.dryrun:
+            processednum = 0
+            fakespammax = 1
+            processmax = 5
 
         # Main loop that iterates over each new uid we haven't seen before
         for u in uids:
@@ -572,8 +582,17 @@ class ISBG:
 
             # Feed it to SpamAssassin in test mode
             if self.dryrun:
-                print("Faking satest")
-                score="10/10"
+                if processednum > processmax:
+                    break
+                if processednum < fakespammax:
+                    print("Faking spam mail")
+                    score = "10/10"
+                    code = 1
+                else:
+                    print("Faking ham mail")
+                    score = "0/10"
+                    code = 0
+                processednum = processednum + 1
             else:
                 p = Popen(self.satest, stdin=PIPE, stdout=PIPE, close_fds=True)
                 try:
@@ -582,6 +601,7 @@ class ISBG:
                         m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)",
                                       score)
                         score = m.group(1) + "/" + m.group(2) + "\n"
+                    code = p.returncode
                 except:
                     continue
             if score == "0/0\n":
@@ -590,14 +610,13 @@ class ISBG:
             if self.verbose:
                 print(u, "score:", score)
 
-            code = p.returncode
             if code == 0:
                 # Message is below threshold
                 # but it was already appended by getmessage...???
                 # self.pastuids.append(u)
                 pass
             else:
-                # Message is spam
+                # Message is spam, delete it or move it to spaminbox (optionally with report)
                 if self.verbose:
                     print(u, "is spam")
 
@@ -608,27 +627,33 @@ class ISBG:
 
                 # do we want to include the spam report
                 if self.noreport is False:
-                    # filter it through sa
-                    p = Popen(self.sasave, stdin=PIPE, stdout=PIPE, close_fds=True)
-                    try:
-                        body = p.communicate(body)[0]
-                    except:
-                        continue
-                    p.stdin.close()
-                    body = crnlify(body)
-                    res = self.imap.append(self.spaminbox, None, None, body)
-                    # The above will fail on some IMAP servers for various reasons.
-                    # we print out what happened and continue processing
-                    if res[0] != 'OK':
-                        print(repr(["append", self.spaminbox, "{body}"]),
-                              "failed for uid" + repr(u) + ": " + repr(res) +
-                              ". Leaving original message alone.")
-                        self.pastuids.append(u)
-                        continue
+                    if self.dryrun:
+                        print("Skipping report because of --dryrun")
+                    else:
+                        # filter it through sa
+                        p = Popen(self.sasave, stdin=PIPE, stdout=PIPE, close_fds=True)
+                        try:
+                            body = p.communicate(body)[0]
+                        except:
+                            continue
+                        p.stdin.close()
+                        body = crnlify(body)
+                        res = self.imap.append(self.spaminbox, None, None, body)
+                        # The above will fail on some IMAP servers for various reasons.
+                        # we print out what happened and continue processing
+                        if res[0] != 'OK':
+                            print(repr(["append", self.spaminbox, "{body}"]),
+                                  "failed for uid" + repr(u) + ": " + repr(res) +
+                                  ". Leaving original message alone.")
+                            self.pastuids.append(u)
+                            continue
                 else:
-                    # just copy it as is
-                    res = self.imap.uid("COPY", u, self.spaminbox)
-                    assertok(res, "uid copy", u, self.spaminbox)
+                    if self.dryrun:
+                        print("Skipping copy to spambox because of --dryrun")
+                    else:
+                        # just copy it as is
+                        res = self.imap.uid("COPY", u, self.spaminbox)
+                        self.assertok(res, "uid copy", u, self.spaminbox)
 
                 spamlist.append(u)
 
@@ -639,29 +664,32 @@ class ISBG:
 
         # If we found any spams, now go and mark the original messages
         if numspam or spamdeleted:
-            res = self.imap.select(self.imapinbox)
-            assertok(res, 'select', self.imapinbox)
-            # Only set message flags if there are any
-            if len(spamflags) > 2:
-                for u in spamlist:
-                    res = self.imap.uid("STORE", u, self.spamflagscmd, imapflags(self.spamflags))
-                    assertok(res, "uid store", u, self.spamflagscmd, imapflags(spamflags))
-                    self.pastuids.append(u)
-            # If its gmail, and --delete was passed, we actually copy!
-            if self.delete and self.gmail:
-                for u in spamlist:
-                    res = self.imap.uid("COPY", u, "[Gmail]/Trash")
-                    assertok(res, "uid copy", u, "[Gmail]/Trash")
-            # Set deleted flag for spam with high score
-            for u in spamdeletelist:
-                if self.gmail is True:
-                    res = self.imap.uid("COPY", u, "[Gmail]/Trash")
-                    assertok(res, "uid copy", u, "[Gmail]/Trash")
-                else:
-                    res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
-                    assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
-            if self.expunge:
-                self.imap.expunge()
+            if self.dryrun:
+                print('Skipping labelling/expunging of mails because of --dryrun')
+            else:
+                res = self.imap.select(self.imapinbox)
+                self.assertok(res, 'select', self.imapinbox)
+                # Only set message flags if there are any
+                if len(spamflags) > 2:
+                    for u in spamlist:
+                        res = self.imap.uid("STORE", u, self.spamflagscmd, imapflags(self.spamflags))
+                        self.assertok(res, "uid store", u, self.spamflagscmd, imapflags(spamflags))
+                        self.pastuids.append(u)
+                # If its gmail, and --delete was passed, we actually copy!
+                if self.delete and self.gmail:
+                    for u in spamlist:
+                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
+                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
+                # Set deleted flag for spam with high score
+                for u in spamdeletelist:
+                    if self.gmail is True:
+                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
+                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
+                    else:
+                        res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
+                if self.expunge:
+                    self.imap.expunge()
 
         if self.teachonly is False:
             # Now tidy up lists of uids
