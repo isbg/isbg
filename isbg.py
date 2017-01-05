@@ -323,6 +323,7 @@ class ISBG:
 
         self.learnunflagged = self.opts.get('--learnunflagged', False)
         self.learnthendestroy = self.opts.get('--learnthendestroy', False)
+        self.learnthenflag = self.opts.get('--learnthendestroy', False)
         self.expunge = self.opts.get('--expunge', False)
 
         self.teachonly = self.opts.get('--teachonly', False)
@@ -452,44 +453,50 @@ class ISBG:
             self.assertok(res, 'select', self.learnspambox)
             s_learnt = 0
             if self.learnunflagged:
-                typ, uids = imap.uid("SEARCH", None, "UNFLAGGED")
+                typ, uids = self.imap.uid("SEARCH", None, "UNFLAGGED")
             else:
-                typ, uids = imap.uid("SEARCH", None, "ALL")
+                typ, uids = self.imap.uid("SEARCH", None, "ALL")
             uids = uids[0].split()
             s_tolearn = len(uids)
+
+
             for u in uids:
                 body = self.getmessage(u)
-                p = Popen(["spamc", "--learntype=spam"],
-                          stdin=PIPE, stdout=PIPE, close_fds=True)
-                try:
-                    out = p.communicate(body)[0]
-                except:
-                    continue
-                code = p.returncode
+                if self.dryrun:
+                    out = self.alreadylearnt
+                    code = 0
+                else:
+                    p = Popen(["spamc", "--learntype=spam"],
+                              stdin=PIPE, stdout=PIPE, close_fds=True)
+                    try:
+                        out = p.communicate(body)[0]
+                    except:
+                        continue
+                    code = p.returncode
+                    p.stdin.close()
                 if code == 69 or code == 74:
                     errorexit("spamd is misconfigured (use --allow-tell)", self.exitcodeflags)
-                p.stdin.close()
-                if not out.strip() == alreadylearnt:
+                if not out.strip() == self.alreadylearnt:
                     s_learnt += 1
                 if self.verbose:
                     print(u, out)
-                if self.learnthendestroy is True:
+                if self.learnthendestroy and not self.dryrun:
                     if self.gmail:
                         res = self.imap.uid("COPY", u, "[Gmail]/Trash")
                         self.assertok(res, "uid copy", u, "[Gmail]/Trash")
                     else:
                         res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
                         self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
-                if opts["--learnthenflag"] is True:
+                if self.learnthenflag and not self.dryrun:
                         res = imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
                         self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
-            if self.expunge:
+            if self.expunge and not self.dryrun:
                 self.imap.expunge()
 
         if self.learnhambox is not None:
             if self.verbose:
                 print("Teach HAM to SA from:", self.learnhambox)
-            res = imap.select(self.learnhambox, 0)
+            res = self.imap.select(self.learnhambox, 0)
             self.assertok(res, 'select', self.learnhambox)
             h_learnt = 0
             if self.learnunflagged:
@@ -500,29 +507,35 @@ class ISBG:
             h_tolearn = len(uids)
             for u in uids:
                 body = self.getmessage(u)
-                p = Popen(["spamc", "--learntype=ham"],
-                          stdin=PIPE, stdout=PIPE, close_fds=True)
-                try:
-                    out = p.communicate(body)[0]
-                except:
-                    continue
-                code = p.returncode
+                if self.dryrun:
+                    out = self.alreadylearnt
+                    code = 0
+                else:
+                    p = Popen(["spamc", "--learntype=ham"],
+                              stdin=PIPE, stdout=PIPE, close_fds=True)
+                    try:
+                        out = p.communicate(body)[0]
+                    except:
+                        continue
+                    code = p.returncode
+                    p.stdin.close()
                 if code == 69 or code == 74:
                     errorexit("spamd is misconfigured (use --allow-tell)")
-                p.stdin.close()
-                if not out.strip() == alreadylearnt: h_learnt += 1
+                if not out.strip() == self.alreadylearnt:
+                    h_learnt += 1
                 if self.verbose:
                     print(u, out)
-                if self.movehamto is not None:
-                    res = imap.uid("COPY", u, movehamto)
-                    self.assertok(res, "uid copy", u, movehamto)
-                if self.learnthendestroy or self.movehamto is not None:
-                    res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
-                    self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
-                if self.learnthenflag:
-                        res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
-                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
-            if self.expunge or self.movehamto is not None:
+                if not self.dryrun:
+                    if self.movehamto is not None:
+                        res = imap.uid("COPY", u, movehamto)
+                        self.assertok(res, "uid copy", u, movehamto)
+                    if self.learnthendestroy or self.movehamto is not None:
+                        res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
+                    if self.learnthenflag:
+                            res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
+                            self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
+            if not self.dryrun and (self.expunge or self.movehamto is not None):
                 self.imap.expunge()
 
         uids = []
@@ -561,8 +574,8 @@ class ISBG:
             if self.partialrun is not None:
                 uids = uids[:int(self.partialrun)]
 
-        if self.verbose:
-            print('Got {} mails to check'.format(len(uids)))
+            if self.verbose:
+                print('Got {} mails to check'.format(len(uids)))
 
         # Keep track of new spam uids
         spamlist = []
