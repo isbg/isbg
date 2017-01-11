@@ -742,10 +742,13 @@ class ISBG:
 
         sys.exit(self.exitcodeok)
 
-if __name__ == '__main__':
+def isbg_run():
     isbg = ISBG()
     isbg.parse_args()
     isbg.do_isbg()
+
+if __name__ == '__main__':
+    isbg_run()
 
 
 

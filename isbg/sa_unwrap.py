@@ -39,7 +39,7 @@ def unwrap(msg_stream):
             return parts
     return None
 
-if __name__ == '__main__':
+def run():
     # select byte streams if they exist (on python 3)
     if hasattr(sys.stdin, 'buffer'):
         inb = sys.stdin.buffer
@@ -55,3 +55,6 @@ if __name__ == '__main__':
             outb.write(spam)
     else:
         outb.write(inp)
+
+if __name__ == '__main__':
+    run()
