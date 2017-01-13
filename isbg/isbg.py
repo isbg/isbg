@@ -647,7 +647,7 @@ class ISBG:
                 if self.verbose:
                     print("""\nLock file is present. Guessing isbg
                           is already running. Exit.""")
-                exit(exitcodelocked)
+                exit(self.exitcodelocked)
             else:
                 lockfile = open(self.lockfilename, 'w')
                 lockfile.write(repr(os.getpid()))
