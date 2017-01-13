@@ -350,6 +350,192 @@ class ISBG:
         if self.opts.get("--lockfilename") is None:
             self.lockfilename = os.path.expanduser("~" + os.sep + ".isbg-lock")
 
+    def pastuid_read(self):
+        # pastuids keeps track of which uids we have already seen, so
+        # that we don't analyze them multiple times. We store its
+        # contents between sessions by saving into a file as Python
+        # code (makes loading it here real easy since we just source
+        # the file)
+        self.pastuids = []
+        try:
+            with open(self.pastuidsfile, 'r') as f:
+                self.pastuids = json.load(f)
+        except:
+            pass
+
+    def pastuid_write(self, newpastuids):
+        # Now tidy up lists of uids
+        newpastuids = list(set([u for u in self.pastuids if u in inboxuids]))
+
+        # only write out pastuids if it has changed
+        if newpastuids != origpastuids:
+            f = open(self.pastuidsfile, "w+")
+            try:
+                os.chmod(self.pastuidsfile, 0600)
+            except:
+                pass
+            json.dump(self.pastuids, f)
+            f.close()
+
+    def spamassassin(self):
+        uids = []
+
+        # check spaminbox exists by examining it
+        res = self.imap.select(self.spaminbox, 1)
+        self.assertok(res, 'select', self.spaminbox, 1)
+
+        # select inbox
+        res = self.imap.select(self.imapinbox, 1)
+        self.assertok(res, 'select', self.imapinbox, 1)
+
+        # get the uids of all mails with a size less then the maxsize
+        typ, inboxuids = self.imap.uid("SEARCH", None, "SMALLER", self.maxsize)
+        inboxuids = inboxuids[0].split()
+
+        # remember what pastuids looked like so that we can compare at the end
+        self.pastuid_read()
+        origpastuids = self.pastuids[:]
+
+        # filter away uids that was previously scanned
+        uids = [u for u in inboxuids if u not in self.pastuids]
+
+        # Take only X elements if partialrun is enabled
+        if self.partialrun is not None:
+            uids = uids[:int(self.partialrun)]
+
+        if self.verbose:
+            print('Got {} mails to check'.format(len(uids)))
+
+        # Keep track of new spam uids
+        spamlist = []
+
+        # Keep track of spam that is to be deleted
+        spamdeletelist = []
+
+        if self.dryrun:
+            processednum = 0
+            fakespammax = 1
+            processmax = 5
+
+        # Main loop that iterates over each new uid we haven't seen before
+        for u in uids:
+            # Retrieve the entire message
+            body = self.getmessage(u, self.pastuids)
+
+            # Feed it to SpamAssassin in test mode
+            if self.dryrun:
+                if processednum > processmax:
+                    break
+                if processednum < fakespammax:
+                    print("Faking spam mail")
+                    score = "10/10"
+                    code = 1
+                else:
+                    print("Faking ham mail")
+                    score = "0/10"
+                    code = 0
+                processednum = processednum + 1
+            else:
+                p = Popen(self.satest, stdin=PIPE, stdout=PIPE, close_fds=True)
+                try:
+                    score = p.communicate(body)[0]
+                    if not self.spamc:
+                        m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)",
+                                      score)
+                        score = m.group(1) + "/" + m.group(2) + "\n"
+                    code = p.returncode
+                except:
+                    continue
+            if score == "0/0\n":
+                errorexit("spamc -> spamd error - aborting", exitcodespamc)
+
+            if self.verbose:
+                print(u, "score:", score)
+
+            if code == 0:
+                # Message is below threshold
+                # but it was already appended by getmessage...???
+                # self.pastuids.append(u)
+                pass
+            else:
+                # Message is spam, delete it or move it to spaminbox (optionally with report)
+                if self.verbose:
+                    print(u, "is spam")
+
+                if (self.deletehigherthan is not None and
+                    float(score.split('/')[0]) > self.deletehigherthan):
+                    spamdeletelist.append(u)
+                    continue
+
+                # do we want to include the spam report
+                if self.noreport is False:
+                    if self.dryrun:
+                        print("Skipping report because of --dryrun")
+                    else:
+                        # filter it through sa
+                        p = Popen(self.sasave, stdin=PIPE, stdout=PIPE, close_fds=True)
+                        try:
+                            body = p.communicate(body)[0]
+                        except:
+                            continue
+                        p.stdin.close()
+                        body = crnlify(body)
+                        res = self.imap.append(self.spaminbox, None, None, body)
+                        # The above will fail on some IMAP servers for various reasons.
+                        # we print out what happened and continue processing
+                        if res[0] != 'OK':
+                            print(repr(["append", self.spaminbox, "{body}"]),
+                                  "failed for uid" + repr(u) + ": " + repr(res) +
+                                  ". Leaving original message alone.")
+                            self.pastuids.append(u)
+                            continue
+                else:
+                    if self.dryrun:
+                        print("Skipping copy to spambox because of --dryrun")
+                    else:
+                        # just copy it as is
+                        res = self.imap.uid("COPY", u, self.spaminbox)
+                        self.assertok(res, "uid copy", u, self.spaminbox)
+
+                spamlist.append(u)
+
+
+        nummsg = len(uids)
+        spamdeleted = len(spamdeletelist)
+        numspam = len(spamlist) + spamdeleted
+
+        # If we found any spams, now go and mark the original messages
+        if numspam or spamdeleted:
+            if self.dryrun:
+                print('Skipping labelling/expunging of mails because of --dryrun')
+            else:
+                res = self.imap.select(self.imapinbox)
+                self.assertok(res, 'select', self.imapinbox)
+                # Only set message flags if there are any
+                if len(spamflags) > 2:
+                    for u in spamlist:
+                        res = self.imap.uid("STORE", u, self.spamflagscmd, imapflags(self.spamflags))
+                        self.assertok(res, "uid store", u, self.spamflagscmd, imapflags(spamflags))
+                        self.pastuids.append(u)
+                # If its gmail, and --delete was passed, we actually copy!
+                if self.delete and self.gmail:
+                    for u in spamlist:
+                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
+                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
+                # Set deleted flag for spam with high score
+                for u in spamdeletelist:
+                    if self.gmail is True:
+                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
+                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
+                    else:
+                        res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
+                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
+                if self.expunge:
+                    self.imap.expunge()
+
+        return (numspam, nummsg, spamdeleted)
+
+
     def spamlearn(self):
         learns = [
             {
@@ -519,190 +705,13 @@ class ISBG:
         s_tolearn, s_learnt = learned[0]
         h_tolearn, h_learnt = learned[1]
 
-        uids = []
-
-        if self.teachonly is False:
-            # check spaminbox exists by examining it
-            res = self.imap.select(self.spaminbox, 1)
-            self.assertok(res, 'select', self.spaminbox, 1)
-
-            # select inbox
-            res = self.imap.select(self.imapinbox, 1)
-            self.assertok(res, 'select', self.imapinbox, 1)
-
-            # get the uids of all mails with a size less then the maxsize
-            typ, inboxuids = self.imap.uid("SEARCH", None, "SMALLER", self.maxsize)
-            inboxuids = inboxuids[0].split()
-
-            # pastuids keeps track of which uids we have already seen, so
-            # that we don't analyze them multiple times. We store its
-            # contents between sessions by saving into a file as Python
-            # code (makes loading it here real easy since we just source
-            # the file)
-            self.pastuids = []
-            try:
-                with open(self.pastuidsfile, 'r') as f:
-                    self.pastuids = json.load(f)
-            except:
-                pass
-            # remember what pastuids looked like so that we can compare at the end
-            origpastuids = self.pastuids[:]
-
-            # filter away uids that was previously scanned
-            uids = [u for u in inboxuids if u not in self.pastuids]
-
-            # Take only X elements if partialrun is enabled
-            if self.partialrun is not None:
-                uids = uids[:int(self.partialrun)]
-
-            if self.verbose:
-                print('Got {} mails to check'.format(len(uids)))
-
-        # Keep track of new spam uids
-        spamlist = []
-
-        # Keep track of spam that is to be deleted
-        spamdeletelist = []
-
-        if self.dryrun:
-            processednum = 0
-            fakespammax = 1
-            processmax = 5
-
-        # Main loop that iterates over each new uid we haven't seen before
-        for u in uids:
-            # Retrieve the entire message
-            body = self.getmessage(u, self.pastuids)
-
-            # Feed it to SpamAssassin in test mode
-            if self.dryrun:
-                if processednum > processmax:
-                    break
-                if processednum < fakespammax:
-                    print("Faking spam mail")
-                    score = "10/10"
-                    code = 1
-                else:
-                    print("Faking ham mail")
-                    score = "0/10"
-                    code = 0
-                processednum = processednum + 1
-            else:
-                p = Popen(self.satest, stdin=PIPE, stdout=PIPE, close_fds=True)
-                try:
-                    score = p.communicate(body)[0]
-                    if not self.spamc:
-                        m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)",
-                                      score)
-                        score = m.group(1) + "/" + m.group(2) + "\n"
-                    code = p.returncode
-                except:
-                    continue
-            if score == "0/0\n":
-                errorexit("spamc -> spamd error - aborting", exitcodespamc)
-
-            if self.verbose:
-                print(u, "score:", score)
-
-            if code == 0:
-                # Message is below threshold
-                # but it was already appended by getmessage...???
-                # self.pastuids.append(u)
-                pass
-            else:
-                # Message is spam, delete it or move it to spaminbox (optionally with report)
-                if self.verbose:
-                    print(u, "is spam")
-
-                if (self.deletehigherthan is not None and
-                    float(score.split('/')[0]) > self.deletehigherthan):
-                    spamdeletelist.append(u)
-                    continue
-
-                # do we want to include the spam report
-                if self.noreport is False:
-                    if self.dryrun:
-                        print("Skipping report because of --dryrun")
-                    else:
-                        # filter it through sa
-                        p = Popen(self.sasave, stdin=PIPE, stdout=PIPE, close_fds=True)
-                        try:
-                            body = p.communicate(body)[0]
-                        except:
-                            continue
-                        p.stdin.close()
-                        body = crnlify(body)
-                        res = self.imap.append(self.spaminbox, None, None, body)
-                        # The above will fail on some IMAP servers for various reasons.
-                        # we print out what happened and continue processing
-                        if res[0] != 'OK':
-                            print(repr(["append", self.spaminbox, "{body}"]),
-                                  "failed for uid" + repr(u) + ": " + repr(res) +
-                                  ". Leaving original message alone.")
-                            self.pastuids.append(u)
-                            continue
-                else:
-                    if self.dryrun:
-                        print("Skipping copy to spambox because of --dryrun")
-                    else:
-                        # just copy it as is
-                        res = self.imap.uid("COPY", u, self.spaminbox)
-                        self.assertok(res, "uid copy", u, self.spaminbox)
-
-                spamlist.append(u)
-
-
-        nummsg = len(uids)
-        spamdeleted = len(spamdeletelist)
-        numspam = len(spamlist) + spamdeleted
-
-        # If we found any spams, now go and mark the original messages
-        if numspam or spamdeleted:
-            if self.dryrun:
-                print('Skipping labelling/expunging of mails because of --dryrun')
-            else:
-                res = self.imap.select(self.imapinbox)
-                self.assertok(res, 'select', self.imapinbox)
-                # Only set message flags if there are any
-                if len(spamflags) > 2:
-                    for u in spamlist:
-                        res = self.imap.uid("STORE", u, self.spamflagscmd, imapflags(self.spamflags))
-                        self.assertok(res, "uid store", u, self.spamflagscmd, imapflags(spamflags))
-                        self.pastuids.append(u)
-                # If its gmail, and --delete was passed, we actually copy!
-                if self.delete and self.gmail:
-                    for u in spamlist:
-                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
-                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
-                # Set deleted flag for spam with high score
-                for u in spamdeletelist:
-                    if self.gmail is True:
-                        res = self.imap.uid("COPY", u, "[Gmail]/Trash")
-                        self.assertok(res, "uid copy", u, "[Gmail]/Trash")
-                    else:
-                        res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
-                        self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
-                if self.expunge:
-                    self.imap.expunge()
-
-        if self.teachonly is False:
-            # Now tidy up lists of uids
-            newpastuids = list(set([u for u in self.pastuids if u in inboxuids]))
-
-            # only write out pastuids if it has changed
-            if newpastuids != origpastuids:
-                f = open(self.pastuidsfile, "w+")
-                try:
-                    os.chmod(self.pastuidsfile, 0600)
-                except:
-                    pass
-                json.dump(self.pastuids, f)
-                f.close()
+        # Spamassassin processing
+        if not self.teachonly:
+            numspam, nummsg, spamdeleted = self.spamassassin()
 
         # sign off
         self.imap.logout()
         del self.imap
-
 
         if self.nostats is False:
             if self.learnspambox is not None:
@@ -713,7 +722,7 @@ class ISBG:
                 print("%d spams found in %d messages") % (numspam, nummsg)
                 print("%d/%d was automatically deleted") % (spamdeleted, numspam)
 
-        if self.exitcodes and nummsg:
+        if self.exitcodes and not self.teachonly:
             res = 0
             if numspam == 0:
                 sys.exit(self.exitcodenewmsgs)
