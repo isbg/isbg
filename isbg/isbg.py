@@ -66,7 +66,7 @@ Options:
 import sys  # Because sys.stderr.write() is called bellow
 
 # FIXME: This is necessary to allow using isbg both straight from the repo and installed / as an import.
-# We should probably decide to not care about running the script straight from the repo.
+# We should probably decide to not care about running isbg as top-level script straight from the repo.
 try:
     from .sa_unwrap import unwrap
 except:
@@ -200,6 +200,59 @@ class ISBG:
         self.passwordhashlen = 256  # should be a multiple of 16
         self.partialrun = None
 
+    def set_imap_opts(self, imaphost, imapport, imapuser, imappasswd, nossl):
+        self.imaphost = imaphost
+        self.imapport = imapport
+        self.imapuser = imapuser
+        self.imappasswd = imappasswd
+        self.nossl = nossl
+
+    def set_mailboxes(self, inbox, spaminbox, learnspambox, learnhambox):
+        self.inbox = inbox
+        self.spaminbox = spaminbox
+        self.learnspambox = learnspambox
+        self.learnhambox = learnhambox
+
+    def set_reporting_opts(self, imaplist, nostats, noreport, exitcodes, verbose, verbose_mails):
+        self.imaplist = imaplist
+        self.nostats = nostats
+        self.noreport = noreport
+        self.exitcodes = exitcodes
+        self.verbose = verbose
+        self.verbose_mails = verbose_mails
+
+    def set_processing_opts(self, dryrun, maxsize, teachonly, spamc, gmail):
+        self.dryrun = dryrun
+        self.maxsize = maxsize
+        self.teachonly = teachonly
+        self.spamc = spamc
+        self.gmail = gmail
+
+    def set_lockfile_opts(self, ignorelockfile, lockfilename, lockfilegrace):
+        self.ignorelockfile = ignorelockfile
+        self.lockfilename = lockfilename
+        self.lockfilegrace = lockfilegrace
+
+    def set_passwort_opts(self, passwdfilename, savepw):
+        self.passwdfilename = passwdfilename
+        self.savepw = savepw
+
+    def set_trackfile_opts(self, trackfile, partialrun):
+        self.trackfile = trackfile
+        self.partialrun = partialrun
+
+    def set_sa_opts(self, movehamto, delete, deletehigherthan, flag, expunge):
+        self.movehamto = movehamto
+        self.delete = delete
+        self.deletehigherthan = deletehigherthan
+        self.flag = flag
+        self.expunge = expunge
+
+    def set_learning_opts(self, learnunflagged, learnthendestroy, learnthenflag):
+        self.learnunflagged = learnunflagged
+        self.learnthendestroy = learnthendestroy
+        self.learnthenflag = learnthenflag
+
     def removelock(self):
         os.remove(self.lockfilename)
 
@@ -264,12 +317,6 @@ class ISBG:
             errorexit("Option processing failed - " + str(e), self.exitcodeflags)
 
 
-        if self.opts["--delete"] is True:
-            if self.opts["--gmail"] is True:
-                pass
-            else:
-                self.spamflags.append("\\Deleted")
-
         if self.opts.get("--deletehigherthan") is not None:
             try:
                 self.deletehigherthan = float(self.opts["--deletehigherthan"])
@@ -293,6 +340,8 @@ class ISBG:
         self.lockfilegrace = self.opts.get('--lockfilegrace', self.lockfilegrace)
         self.nostats = self.opts.get('--nostats', False)
         self.dryrun = self.opts.get('--dryrun', False)
+        self.delete = self.opts.get('--delete', False)
+        self.gmail = self.opts.get('--gmail', False)
 
         if self.opts.get("--maxsize") is not None:
             try:
@@ -308,11 +357,6 @@ class ISBG:
             self.interactive = 0
 
         self.noreport = self.opts.get('--noreport', self.noreport)
-
-        if self.opts["--spamc"] is True:
-            self.spamc = True
-            self.satest = ["spamc", "-c"]
-            self.sasave = ["spamc"]
 
         self.spaminbox = self.opts.get('--spaminbox', self.spaminbox)
 
@@ -339,6 +383,7 @@ class ISBG:
         self.expunge = self.opts.get('--expunge', False)
 
         self.teachonly = self.opts.get('--teachonly', False)
+        self.spamc = self.opts.get('--spamc', False)
 
         self.exitcodes = self.opts.get('--exitcodes', False)
 
@@ -628,6 +673,13 @@ class ISBG:
     def do_isbg(self):
         # Make sure to delete lock file
         atexit.register(self.removelock)
+
+        if self.spamc:
+            self.satest = ["spamc", "-c"]
+            self.sasave = ["spamc"]
+
+        if self.delete and not self.gmail:
+            self.spamflags.append("\\Deleted")
 
         if self.passwdfilename is None:
             m = md5()
