@@ -65,10 +65,22 @@ Options:
 
 import sys  # Because sys.stderr.write() is called bellow
 
+# FIXME: This is necessary to allow using isbg both straight from the repo and installed / as an import.
+# We should probably decide to not care about running the script straight from the repo.
+try:
+    from .sa_unwrap import unwrap
+except:
+    try:
+        from sa_unwrap import unwrap
+    except ImportError:
+        sys.stderr.write('Cannot load sa_unwrap, please install isbg package properly!\n')
+        # Create No-Op dummy function
+        unwrap = lambda x: None
+
 try:
     from docopt import docopt  # Creating command-line interface
 except ImportError:
-    sys.stderr.write("Missing dependency: docopt")
+    sys.stderr.write("Missing dependency: docopt\n")
 
 from subprocess import Popen, PIPE
 
@@ -421,6 +433,10 @@ class ISBG:
         for u in uids:
             # Retrieve the entire message
             body = self.getmessage(u, self.pastuids)
+            # Unwrap spamassassin reports
+            unwrapped = unwrap(body)
+            if unwrapped is not None:
+                body = unwrapped
 
             # Feed it to SpamAssassin in test mode
             if self.dryrun:
@@ -569,6 +585,10 @@ class ISBG:
 
                 for u in uids:
                     body = self.getmessage(u)
+                    # Unwrap spamassassin reports
+                    unwrapped = unwrap(body)
+                    if unwrapped is not None:
+                        body = unwrapped
                     if self.dryrun:
                         out = self.alreadylearnt
                         code = 0
