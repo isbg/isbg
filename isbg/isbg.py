@@ -64,6 +64,7 @@ Options:
 """
 
 import sys  # Because sys.stderr.write() is called bellow
+from io import BytesIO
 
 # FIXME: This is necessary to allow using isbg both straight from the repo and installed / as an import.
 # We should probably decide to not care about running isbg as top-level script straight from the repo.
@@ -163,18 +164,62 @@ class ISBG:
     exitcodelocked = 30     # there's certainly another isbg running
 
     def __init__(self):
-        self.imapuser = ''
-        self.imaphost = 'localhost'
-        self.imapport = 143
-        self.imappasswd = None
-        self.imapinbox = "INBOX"
-        self.spaminbox = "INBOX.spam"
-        self.interactive = sys.stdin.isatty()
-        self.maxsize = 120000  # messages larger than this aren't considered
-        self.pastuidsfile = None
-        self.lockfilegrace = 240
-        self.alreadylearnt = "Message was already un/learned"
+        self.set_imap_opts(
+            imaphost='localhost',
+            imapport=143,
+            imapuser='',
+            imappasswd=None,
+            nossl=False
+        )
+        self.set_mailboxes(
+            inbox="INBOX",
+            spaminbox="INBOX.spam",
+            learnspambox=None,
+            learnhambox=None
+        )
+        self.set_reporting_opts(
+            imaplist=False,
+            nostats=False,
+            noreport=False,
+            exitcodes=True,
+            verbose=False,
+            verbose_mails=False
+        )
+        self.set_processing_opts(
+            dryrun=False,
+            maxsize=120000,
+            teachonly=False,
+            spamc=False,
+            gmail=False
+        )
+        self.set_lockfile_opts(
+            ignorelockfile=False,
+            lockfilename=os.path.expanduser("~" + os.sep + ".isbg-lock"),
+            lockfilegrace=240
+        )
+        self.set_password_opts(
+            passwdfilename=None,
+            savepw=False
+        )
+        self.set_trackfile_opts(
+            trackfile=None,
+            partialrun=False
+        )
+        self.set_sa_opts(
+            movehamto=None,
+            delete=False,
+            deletehigherthan=None,
+            flag=False,
+            expunge=False
+        )
+        self.set_learning_opts(
+            learnunflagged=False,
+            learnthendestroy=False,
+            learnthenflag=False
+        )
 
+        self.interactive = sys.stdin.isatty()
+        self.alreadylearnt = "Message was already un/learned"
         # satest is the command that is used to test if the message is spam
         self.satest = ["spamassassin", "--exit-code"]
         # sasave is the one that dumps out a munged message including report
@@ -183,8 +228,6 @@ class ISBG:
         self.spamflagscmd = "+FLAGS.SILENT"
         # and the flags we set them to (none by default)
         self.spamflags = []
-        # exclude the spamassassin report in the message placed in spaminbox
-        self.noreport = False
 
         # ###
         # ### exitcode maps
@@ -198,7 +241,6 @@ class ISBG:
         self.passwdfilename = None
         self.passwordhash = None
         self.passwordhashlen = 256  # should be a multiple of 16
-        self.partialrun = None
 
     def set_imap_opts(self, imaphost, imapport, imapuser, imappasswd, nossl):
         self.imaphost = imaphost
@@ -208,7 +250,7 @@ class ISBG:
         self.nossl = nossl
 
     def set_mailboxes(self, inbox, spaminbox, learnspambox, learnhambox):
-        self.inbox = inbox
+        self.imapinbox = inbox
         self.spaminbox = spaminbox
         self.learnspambox = learnspambox
         self.learnhambox = learnhambox
@@ -233,12 +275,12 @@ class ISBG:
         self.lockfilename = lockfilename
         self.lockfilegrace = lockfilegrace
 
-    def set_passwort_opts(self, passwdfilename, savepw):
+    def set_password_opts(self, passwdfilename, savepw):
         self.passwdfilename = passwdfilename
         self.savepw = savepw
 
     def set_trackfile_opts(self, trackfile, partialrun):
-        self.trackfile = trackfile
+        self.pastuidsfile = trackfile
         self.partialrun = partialrun
 
     def set_sa_opts(self, movehamto, delete, deletehigherthan, flag, expunge):
@@ -313,7 +355,7 @@ class ISBG:
             self.opts = docopt(__doc__, version="isbg version 1.00")
             self.opts = dict([(k,v) for k,v in self.opts.items() if v is not None])
             print(self.opts)
-        except Exception, e:
+        except Exception as e:
             errorexit("Option processing failed - " + str(e), self.exitcodeflags)
 
 
@@ -360,7 +402,7 @@ class ISBG:
 
         self.spaminbox = self.opts.get('--spaminbox', self.spaminbox)
 
-        self.lockfilename = self.opts.get('--lockfilename', None)
+        self.lockfilename = self.opts.get('--lockfilename', self.lockfilename)
 
         self.pastuidsfile = self.opts.get('--trackfile', self.pastuidsfile)
 
@@ -395,18 +437,6 @@ class ISBG:
             else:
                 self.imapport = 993
 
-        if self.pastuidsfile is None:
-            self.pastuidsfile = os.path.expanduser("~" + os.sep + ".isbg-track")
-            m = md5()
-            m.update(self.imaphost)
-            m.update(self.imapuser)
-            m.update(repr(self.imapport))
-            res = hexof(m.digest())
-            self.pastuidsfile = self.pastuidsfile + res
-
-        if self.opts.get("--lockfilename") is None:
-            self.lockfilename = os.path.expanduser("~" + os.sep + ".isbg-lock")
-
     def pastuid_read(self):
         # pastuids keeps track of which uids we have already seen, so
         # that we don't analyze them multiple times. We store its
@@ -428,7 +458,7 @@ class ISBG:
         if newpastuids != origpastuids:
             f = open(self.pastuidsfile, "w+")
             try:
-                os.chmod(self.pastuidsfile, 0600)
+                os.chmod(self.pastuidsfile, 0o600)
             except:
                 pass
             json.dump(self.pastuids, f)
@@ -479,7 +509,7 @@ class ISBG:
             # Retrieve the entire message
             body = self.getmessage(u, self.pastuids)
             # Unwrap spamassassin reports
-            unwrapped = unwrap(body)
+            unwrapped = unwrap(BytesIO(body))
             if unwrapped is not None:
                 body = unwrapped
 
@@ -631,7 +661,7 @@ class ISBG:
                 for u in uids:
                     body = self.getmessage(u)
                     # Unwrap spamassassin reports
-                    unwrapped = unwrap(body)
+                    unwrapped = unwrap(BytesIO(body))
                     if unwrapped is not None:
                         body = unwrapped
                     if self.dryrun:
@@ -671,9 +701,6 @@ class ISBG:
         return result
 
     def do_isbg(self):
-        # Make sure to delete lock file
-        atexit.register(self.removelock)
-
         if self.spamc:
             self.satest = ["spamc", "-c"]
             self.sasave = ["spamc"]
@@ -681,22 +708,31 @@ class ISBG:
         if self.delete and not self.gmail:
             self.spamflags.append("\\Deleted")
 
+        if self.pastuidsfile is None:
+            self.pastuidsfile = os.path.expanduser("~" + os.sep + ".isbg-track")
+            m = md5()
+            m.update(self.imaphost.encode())
+            m.update(self.imapuser.encode())
+            m.update(repr(self.imapport).encode())
+            res = m.hexdigest()
+            self.pastuidsfile = self.pastuidsfile + res
+
         if self.passwdfilename is None:
             m = md5()
-            m.update(self.imaphost)
-            m.update(self.imapuser)
-            m.update(repr(self.imapport))
+            m.update(self.imaphost.encode())
+            m.update(self.imapuser.encode())
+            m.update(repr(self.imapport).encode())
             self.passwdfilename = os.path.expanduser("~" + os.sep +
-                                                ".isbg-" + hexof(m.digest()))
+                                                ".isbg-" + m.hexdigest())
 
         if self.passwordhash is None:
             # We make hash that the password is xor'ed against
             m = md5()
-            m.update(self.imaphost)
+            m.update(self.imaphost.encode())
             m.update(m.digest())
-            m.update(self.imapuser)
+            m.update(self.imapuser.encode())
             m.update(m.digest())
-            m.update(repr(self.imapport))
+            m.update(repr(self.imapport).encode())
             m.update(m.digest())
             self.passwordhash = m.digest()
             while len(self.passwordhash) < self.passwordhashlen:
@@ -724,6 +760,9 @@ class ISBG:
                 lockfile = open(self.lockfilename, 'w')
                 lockfile.write(repr(os.getpid()))
                 lockfile.close()
+                # Make sure to delete lock file
+                atexit.register(self.removelock)
+
 
         # Figure out the password
         if self.imappasswd is None:
@@ -748,7 +787,7 @@ class ISBG:
             if self.savepw:
                 f = open(self.passwdfilename, "wb+")
                 try:
-                    os.chmod(self.passwdfilename, 0600)
+                    os.chmod(self.passwdfilename, 0o600)
                 except:
                     pass
                 f.write(hexof(self.setpw(imappasswd, passwordhash)))
@@ -787,22 +826,23 @@ class ISBG:
 
         if self.nostats is False:
             if self.learnspambox is not None:
-                print("%d/%d spams learnt") % (s_learnt, s_tolearn)
+                print(("%d/%d spams learnt") % (s_learnt, s_tolearn))
             if self.learnhambox:
-                print("%d/%d hams learnt") % (h_learnt, h_tolearn)
+                print(("%d/%d hams learnt") % (h_learnt, h_tolearn))
             if not self.teachonly:
-                print("%d spams found in %d messages") % (numspam, nummsg)
-                print("%d/%d was automatically deleted") % (spamdeleted, numspam)
+                print(("%d spams found in %d messages") % (numspam, nummsg))
+                print(("%d/%d was automatically deleted") % (spamdeleted, numspam))
 
-        if self.exitcodes and not self.teachonly:
-            res = 0
-            if numspam == 0:
-                sys.exit(self.exitcodenewmsgs)
-            if numspam == nummsg:
-                sys.exit(self.exitcodenewspam)
-            sys.exit(self.exitcodenewmsgspam)
+        if self.exitcodes:
+            if not self.teachonly:
+                res = 0
+                if numspam == 0:
+                    sys.exit(self.exitcodenewmsgs)
+                if numspam == nummsg:
+                    sys.exit(self.exitcodenewspam)
+                sys.exit(self.exitcodenewmsgspam)
 
-        sys.exit(self.exitcodeok)
+            sys.exit(self.exitcodeok)
 
 def isbg_run():
     isbg = ISBG()
