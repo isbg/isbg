@@ -93,15 +93,21 @@ import string
 import time
 import atexit
 import json
+import logging
 
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
 
+class ISBGError(Exception):
+    pass
+
 def errorexit(msg, exitcode):
     sys.stderr.write(msg)
     sys.stderr.write("\nUse --help to see valid options and arguments\n")
+    if exitcode == -1:
+        raise ISBGError((exitcode, msg))
     sys.exit(exitcode)
 
 def hexof(x):
@@ -164,6 +170,9 @@ class ISBG:
     exitcodelocked = 30     # there's certainly another isbg running
 
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
         self.set_imap_opts(
             imaphost='localhost',
             imapport=143,
@@ -328,9 +337,7 @@ class ISBG:
                 body = res[1][0][1]
             except:
                 if self.verbose:
-                    print("Confused - rfc822 fetch gave " + repr(res))
-                    print("""The message was probably deleted
-                          while we were running""")
+                    self.logger.warning("Confused - rfc822 fetch gave {} - The message was probably deleted while we were running".format(res))
                 if append_to is not None:
                     append_to.append(uid)
         else:
@@ -341,20 +348,19 @@ class ISBG:
     # It also prints out what happened (which would end
     # up /dev/null'ed in non-verbose mode)
     def assertok(self, res, *args):
-        if self.verbose:
-            if 'fetch' in args[0] and not self.verbose_mails:
-                res = shorten(res, 100)
-            print(repr(args), "=", res)
+        if 'fetch' in args[0] and not self.verbose_mails:
+            res = shorten(res, 100)
+        self.logger.debug("{} = {}".format(args,res))
         if res[0] != "OK":
+            self.logger.error("{} returned {} - aborting")
             errorexit("\n%s returned %s - aborting\n"
-                      % (repr(args), res), self.exitcodeimap)
+                      % (repr(args), res), self.exitcodeimap if self.exitcodes else -1)
 
     def parse_args(self):
         # Argument processing
         try:
             self.opts = docopt(__doc__, version="isbg version 1.00")
             self.opts = dict([(k,v) for k,v in self.opts.items() if v is not None])
-            print(self.opts)
         except Exception as e:
             errorexit("Option processing failed - " + str(e), self.exitcodeflags)
 
@@ -490,8 +496,7 @@ class ISBG:
         if self.partialrun is not None:
             uids = uids[:int(self.partialrun)]
 
-        if self.verbose:
-            print('Got {} mails to check'.format(len(uids)))
+        self.logger.debug('Got {} mails to check'.format(len(uids)))
 
         # Keep track of new spam uids
         spamlist = []
@@ -518,11 +523,11 @@ class ISBG:
                 if processednum > processmax:
                     break
                 if processednum < fakespammax:
-                    print("Faking spam mail")
+                    self.logger.info("Faking spam mail")
                     score = "10/10"
                     code = 1
                 else:
-                    print("Faking ham mail")
+                    self.logger.info("Faking ham mail")
                     score = "0/10"
                     code = 0
                 processednum = processednum + 1
@@ -540,8 +545,7 @@ class ISBG:
             if score == "0/0\n":
                 errorexit("spamc -> spamd error - aborting", exitcodespamc)
 
-            if self.verbose:
-                print(u, "score:", score)
+            self.logger.debug(u, "score:", score)
 
             if code == 0:
                 # Message is below threshold
@@ -550,8 +554,7 @@ class ISBG:
                 pass
             else:
                 # Message is spam, delete it or move it to spaminbox (optionally with report)
-                if self.verbose:
-                    print(u, "is spam")
+                self.logger.debug("{} is spam".format(u))
 
                 if (self.deletehigherthan is not None and
                     float(score.split('/')[0]) > self.deletehigherthan):
@@ -561,7 +564,7 @@ class ISBG:
                 # do we want to include the spam report
                 if self.noreport is False:
                     if self.dryrun:
-                        print("Skipping report because of --dryrun")
+                        self.logger.info("Skipping report because of --dryrun")
                     else:
                         # filter it through sa
                         p = Popen(self.sasave, stdin=PIPE, stdout=PIPE, close_fds=True)
@@ -575,14 +578,12 @@ class ISBG:
                         # The above will fail on some IMAP servers for various reasons.
                         # we print out what happened and continue processing
                         if res[0] != 'OK':
-                            print(repr(["append", self.spaminbox, "{body}"]),
-                                  "failed for uid" + repr(u) + ": " + repr(res) +
-                                  ". Leaving original message alone.")
+                            self.logger.error("{} failed for uid {}: {}. Leaving original message alone.".format(repr(["append", self.spaminbox, "{body}"]), repr(u), repr(res)))
                             self.pastuids.append(u)
                             continue
                 else:
                     if self.dryrun:
-                        print("Skipping copy to spambox because of --dryrun")
+                        self.logger.info("Skipping copy to spambox because of --dryrun")
                     else:
                         # just copy it as is
                         res = self.imap.uid("COPY", u, self.spaminbox)
@@ -598,7 +599,7 @@ class ISBG:
         # If we found any spams, now go and mark the original messages
         if numspam or spamdeleted:
             if self.dryrun:
-                print('Skipping labelling/expunging of mails because of --dryrun')
+                self.logger.info('Skipping labelling/expunging of mails because of --dryrun')
             else:
                 res = self.imap.select(self.imapinbox)
                 self.assertok(res, 'select', self.imapinbox)
@@ -647,8 +648,7 @@ class ISBG:
             n_learnt = 0
             n_tolearn = 0
             if learntype['inbox'] is not None:
-                if self.verbose:
-                    print("Teach {} to SA from: {}".format(learntype['learntype'], learntype['inbox']))
+                self.logger.debug("Teach {} to SA from: {}".format(learntype['learntype'], learntype['inbox']))
                 res = self.imap.select(learntype['inbox'])
                 self.assertok(res, 'select', learntype['inbox'])
                 if self.learnunflagged:
@@ -680,8 +680,7 @@ class ISBG:
                         errorexit("spamd is misconfigured (use --allow-tell)", self.exitcodeflags)
                     if not out.strip() == self.alreadylearnt:
                         n_learnt += 1
-                    if self.verbose:
-                        print(u, out)
+                    self.logger.debug("{} {}".format(u, out))
                     if not self.dryrun:
                         if self.learnthendestroy:
                             if self.gmail:
@@ -701,6 +700,13 @@ class ISBG:
         return result
 
     def do_isbg(self):
+        ch = logging.StreamHandler()
+        self.logger.addHandler(ch)
+        if self.verbose:
+            ch.setLevel(logging.DEBUG)
+        else:
+            ch.setLevel(logging.INFO)
+
         if self.spamc:
             self.satest = ["spamc", "-c"]
             self.sasave = ["spamc"]
@@ -739,23 +745,20 @@ class ISBG:
                 m.update(self.passwordhash)
                 self.passwordhash = self.passwordhash + m.digest()
 
-        if self.verbose:
-            print("Lock file is", self.lockfilename)
-            print("Trackfile is", self.pastuidsfile)
-            print("SpamFlags are", self.spamflags)
-            print("Password file is", self.passwdfilename)
+        self.logger.debug("Lock file is {}".format(self.lockfilename))
+        self.logger.debug("Trackfile is {}".format(self.pastuidsfile))
+        self.logger.debug("SpamFlags are {}".format(self.spamflags))
+        self.logger.debug("Password file is {}".format(self.passwdfilename))
 
         # Acquire lockfilename or exit
         if self.ignorelockfile:
-            if self.verbose:
-                print("Lock file is ignored. Continue.")
+            self.logger.debug("Lock file is ignored. Continue.")
         else:
             if os.path.exists(self.lockfilename) and (os.path.getmtime(self.lockfilename) +
                                                  (self.lockfilegrace * 60) > time.time()):
-                if self.verbose:
-                    print("""\nLock file is present. Guessing isbg
-                          is already running. Exit.""")
-                exit(self.exitcodelocked)
+                self.logger.debug("""\nLock file is present. Guessing isbg
+                      is already running. Exit.""")
+                errorexit(self.exitcodelocked)
             else:
                 lockfile = open(self.lockfilename, 'w')
                 lockfile.write(repr(os.getpid()))
@@ -770,8 +773,7 @@ class ISBG:
                 try:
                     self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read()),
                                        self.passwordhash)
-                    if self.verbose:
-                        print("Successfully read password file")
+                    self.logger.debug("Successfully read password file")
                 except:
                     pass
 
@@ -809,7 +811,7 @@ class ISBG:
         if self.imaplist:
             imap_list = str(self.imap.list())
             imap_list = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",imap_list) # string formatting
-            print(imap_list)
+            self.logger.info(imap_list)
 
         # Spamassassin training
         learned = self.spamlearn()
@@ -826,12 +828,12 @@ class ISBG:
 
         if self.nostats is False:
             if self.learnspambox is not None:
-                print(("%d/%d spams learnt") % (s_learnt, s_tolearn))
+                self.logger.info(("%d/%d spams learnt") % (s_learnt, s_tolearn))
             if self.learnhambox:
-                print(("%d/%d hams learnt") % (h_learnt, h_tolearn))
+                self.logger.info(("%d/%d hams learnt") % (h_learnt, h_tolearn))
             if not self.teachonly:
-                print(("%d spams found in %d messages") % (numspam, nummsg))
-                print(("%d/%d was automatically deleted") % (spamdeleted, numspam))
+                self.logger.info(("%d spams found in %d messages") % (numspam, nummsg))
+                self.logger.info(("%d/%d was automatically deleted") % (spamdeleted, numspam))
 
         if self.exitcodes:
             if not self.teachonly:
