@@ -701,12 +701,6 @@ class ISBG:
         return result
 
     def do_isbg(self):
-        ch = logging.StreamHandler()
-        self.logger.addHandler(ch)
-        if self.verbose:
-            ch.setLevel(logging.DEBUG)
-        else:
-            ch.setLevel(logging.INFO)
 
         if self.spamc:
             self.satest = ["spamc", "-c"]
@@ -850,6 +844,12 @@ class ISBG:
 def isbg_run():
     isbg = ISBG()
     isbg.parse_args()
+    ch = logging.StreamHandler()
+    isbg.logger.addHandler(ch)
+    if self.verbose:
+        ch.setLevel(logging.DEBUG)
+    else:
+        ch.setLevel(logging.INFO)
     isbg.do_isbg()
 
 if __name__ == '__main__':
