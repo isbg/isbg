@@ -678,7 +678,7 @@ class ISBG:
                         p.stdin.close()
                     if code == 69 or code == 74:
                         errorexit("spamd is misconfigured (use --allow-tell)", self.exitcodeflags)
-                    if not out.strip() == self.alreadylearnt:
+                    if not out.strip().decode() == self.alreadylearnt:
                         n_learnt += 1
                     self.logger.debug("{} {}".format(u, out))
                     if not self.dryrun:
