@@ -305,7 +305,8 @@ class ISBG:
         self.learnthenflag = learnthenflag
 
     def removelock(self):
-        os.remove(self.lockfilename)
+        if os.path.exists(self.lockfilename):
+            os.remove(self.lockfilename)
 
     # Password stuff
     def getpw(self, data, hash):
@@ -647,7 +648,7 @@ class ISBG:
         for learntype in learns:
             n_learnt = 0
             n_tolearn = 0
-            if learntype['inbox'] is not None:
+            if learntype['inbox']:
                 self.logger.debug("Teach {} to SA from: {}".format(learntype['learntype'], learntype['inbox']))
                 res = self.imap.select(learntype['inbox'])
                 self.assertok(res, 'select', learntype['inbox'])
