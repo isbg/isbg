@@ -444,7 +444,17 @@ class ISBG:
             else:
                 self.imapport = 993
 
-    def pastuid_read(self, folder='inbox'):
+    def get_uidvalidity(self, mailbox):
+        uidvalidity = 0
+        mbstatus = self.imap.status(mailbox, '(UIDVALIDITY)')
+        if mbstatus[0] == 'OK':
+            body = mbstatus[1][0].decode()
+            m = re.search('UIDVALIDITY ([0-9]+)', body)
+            if m is not None:
+                uidvalidity = int(m.groups()[0])
+        return uidvalidity
+
+    def pastuid_read(self, uidvalidity, folder='inbox'):
         # pastuids keeps track of which uids we have already seen, so
         # that we don't analyze them multiple times. We store its
         # contents between sessions by saving into a file as Python
@@ -453,18 +463,24 @@ class ISBG:
         pastuids = []
         try:
             with open(self.pastuidsfile + folder, 'r') as f:
-                pastuids = json.load(f)
+                struct = json.load(f)
+                if struct['uidvalidity'] == uidvalidity:
+                    pastuids = struct['uids']
         except:
             pass
         return pastuids
 
-    def pastuid_write(self, origpastuids, newpastuids, folder='inbox'):
+    def pastuid_write(self, uidvalidity, origpastuids, newpastuids, folder='inbox'):
         f = open(self.pastuidsfile + folder, "w+")
         try:
             os.chmod(self.pastuidsfile + folder, 0o600)
         except:
             pass
-        json.dump(newpastuids + origpastuids, f)
+        struct = {
+                'uidvalidity': uidvalidity,
+                'uids': newpastuids + origpastuids
+        }
+        json.dump(struct, f)
         f.close()
 
     def spamassassin(self):
@@ -478,12 +494,14 @@ class ISBG:
         res = self.imap.select(self.imapinbox, 1)
         self.assertok(res, 'select', self.imapinbox, 1)
 
+        uidvalidity = self.get_uidvalidity(self.imapinbox)
+
         # get the uids of all mails with a size less then the maxsize
         typ, inboxuids = self.imap.uid("SEARCH", None, "SMALLER", self.maxsize)
         inboxuids = inboxuids[0].split()
 
         # remember what pastuids looked like so that we can compare at the end
-        origpastuids = self.pastuid_read()
+        origpastuids = self.pastuid_read(uidvalidity)
         newpastuids = []
 
         # filter away uids that was previously scanned
@@ -587,7 +605,7 @@ class ISBG:
 
                 spamlist.append(u)
 
-        self.pastuid_write(origpastuids, newpastuids)
+        self.pastuid_write(uidvalidity, origpastuids, newpastuids)
 
         nummsg = len(uids)
         spamdeleted = len(spamdeletelist)
@@ -646,7 +664,8 @@ class ISBG:
             n_tolearn = 0
             if learntype['inbox']:
                 self.logger.debug("Teach {} to SA from: {}".format(learntype['learntype'], learntype['inbox']))
-                origpastuids = self.pastuid_read(folder=learntype['learntype'])
+                uidvalidity = self.get_uidvalidity(learntype['inbox'])
+                origpastuids = self.pastuid_read(uidvalidity, folder=learntype['learntype'])
                 newpastuids = []
                 res = self.imap.select(learntype['inbox'])
                 self.assertok(res, 'select', learntype['inbox'])
@@ -697,7 +716,7 @@ class ISBG:
                         elif self.learnthenflag:
                             res = imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
                             self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
-                self.pastuid_write(origpastuids, newpastuids, folder=learntype['learntype'])
+                self.pastuid_write(uidvalidity, origpastuids, newpastuids, folder=learntype['learntype'])
             result.append((n_tolearn, n_learnt))
 
         return result
