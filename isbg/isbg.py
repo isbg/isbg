@@ -340,7 +340,7 @@ class ISBG:
                 if self.verbose:
                     self.logger.warning("Confused - rfc822 fetch gave {} - The message was probably deleted while we were running".format(res))
                 if append_to is not None:
-                    append_to.append(uid)
+                    append_to.append(int(uid))
         else:
             body = res[1][0][1]
         return body
@@ -444,32 +444,28 @@ class ISBG:
             else:
                 self.imapport = 993
 
-    def pastuid_read(self):
+    def pastuid_read(self, folder='inbox'):
         # pastuids keeps track of which uids we have already seen, so
         # that we don't analyze them multiple times. We store its
         # contents between sessions by saving into a file as Python
         # code (makes loading it here real easy since we just source
         # the file)
-        self.pastuids = []
+        pastuids = []
         try:
-            with open(self.pastuidsfile, 'r') as f:
-                self.pastuids = json.load(f)
+            with open(self.pastuidsfile + folder, 'r') as f:
+                pastuids = json.load(f)
         except:
             pass
+        return pastuids
 
-    def pastuid_write(self, newpastuids):
-        # Now tidy up lists of uids
-        newpastuids = list(set([u for u in self.pastuids if u in inboxuids]))
-
-        # only write out pastuids if it has changed
-        if newpastuids != origpastuids:
-            f = open(self.pastuidsfile, "w+")
-            try:
-                os.chmod(self.pastuidsfile, 0o600)
-            except:
-                pass
-            json.dump(self.pastuids, f)
-            f.close()
+    def pastuid_write(self, origpastuids, newpastuids, folder='inbox'):
+        f = open(self.pastuidsfile + folder, "w+")
+        try:
+            os.chmod(self.pastuidsfile + folder, 0o600)
+        except:
+            pass
+        json.dump(newpastuids + origpastuids, f)
+        f.close()
 
     def spamassassin(self):
         uids = []
@@ -487,11 +483,11 @@ class ISBG:
         inboxuids = inboxuids[0].split()
 
         # remember what pastuids looked like so that we can compare at the end
-        self.pastuid_read()
-        origpastuids = self.pastuids[:]
+        origpastuids = self.pastuid_read()
+        newpastuids = []
 
         # filter away uids that was previously scanned
-        uids = [u for u in inboxuids if u not in self.pastuids]
+        uids = [u for u in inboxuids if int(u) not in origpastuids]
 
         # Take only X elements if partialrun is enabled
         if self.partialrun is not None:
@@ -513,7 +509,7 @@ class ISBG:
         # Main loop that iterates over each new uid we haven't seen before
         for u in uids:
             # Retrieve the entire message
-            body = self.getmessage(u, self.pastuids)
+            body = self.getmessage(u, newpastuids)
             # Unwrap spamassassin reports
             unwrapped = unwrap(BytesIO(body))
             if unwrapped is not None:
@@ -580,7 +576,6 @@ class ISBG:
                         # we print out what happened and continue processing
                         if res[0] != 'OK':
                             self.logger.error("{} failed for uid {}: {}. Leaving original message alone.".format(repr(["append", self.spaminbox, "{body}"]), repr(u), repr(res)))
-                            self.pastuids.append(u)
                             continue
                 else:
                     if self.dryrun:
@@ -592,6 +587,7 @@ class ISBG:
 
                 spamlist.append(u)
 
+        self.pastuid_write(origpastuids, newpastuids)
 
         nummsg = len(uids)
         spamdeleted = len(spamdeletelist)
@@ -609,7 +605,7 @@ class ISBG:
                     for u in spamlist:
                         res = self.imap.uid("STORE", u, self.spamflagscmd, imapflags(self.spamflags))
                         self.assertok(res, "uid store", u, self.spamflagscmd, imapflags(spamflags))
-                        self.pastuids.append(u)
+                        newpastuids.append(u)
                 # If its gmail, and --delete was passed, we actually copy!
                 if self.delete and self.gmail:
                     for u in spamlist:
@@ -650,6 +646,8 @@ class ISBG:
             n_tolearn = 0
             if learntype['inbox']:
                 self.logger.debug("Teach {} to SA from: {}".format(learntype['learntype'], learntype['inbox']))
+                origpastuids = self.pastuid_read(folder=learntype['learntype'])
+                newpastuids = []
                 res = self.imap.select(learntype['inbox'])
                 self.assertok(res, 'select', learntype['inbox'])
                 if self.learnunflagged:
@@ -657,7 +655,9 @@ class ISBG:
                 else:
                     typ, uids = self.imap.uid("SEARCH", None, "ALL")
                 uids = uids[0].split()
+                uids = [u for u in uids if int(u) not in origpastuids]
                 n_tolearn = len(uids)
+
 
                 for u in uids:
                     body = self.getmessage(u)
@@ -681,6 +681,7 @@ class ISBG:
                         errorexit("spamd is misconfigured (use --allow-tell)", self.exitcodeflags)
                     if not out.strip().decode() == self.alreadylearnt:
                         n_learnt += 1
+                    newpastuids.append(int(u))
                     self.logger.debug("{} {}".format(u, out))
                     if not self.dryrun:
                         if self.learnthendestroy:
@@ -696,6 +697,7 @@ class ISBG:
                         elif self.learnthenflag:
                             res = imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
                             self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
+                self.pastuid_write(origpastuids, newpastuids, folder=learntype['learntype'])
             result.append((n_tolearn, n_learnt))
 
         return result
