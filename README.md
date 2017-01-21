@@ -405,6 +405,12 @@ long.
 
 # Contact and about<a name="Contact-and-about"></a>
 
+Please join our [developpement mailing list](https://mail.python.org/mm3/mailman3/lists/isbg.python.org/)
+if you use ISBG or contribute to it! The mailing list will be used to announce
+project news and to discuss the further developpement of ISBG.
+
+You can also hang out with us on IRC, at `#isbg` on Freenode.
+
 This software was written by Roger Binns 
 &lt;[rogerb@rogerbinns.com](mailto:rogerb@rogerbinns.com)&gt;
  and is maintained by Thomas Lecavelier 
