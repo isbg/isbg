@@ -82,6 +82,7 @@ try:
     from docopt import docopt  # Creating command-line interface
 except ImportError:
     sys.stderr.write("Missing dependency: docopt\n")
+    raise
 
 from subprocess import Popen, PIPE
 
@@ -337,6 +338,7 @@ class ISBG:
             try:
                 body = res[1][0][1]
             except:
+                self.exception('IMAP Message not in expected format!')
                 if self.verbose:
                     self.logger.warning("Confused - rfc822 fetch gave {} - The message was probably deleted while we were running".format(res))
                 if append_to is not None:
@@ -476,6 +478,7 @@ class ISBG:
             os.chmod(self.pastuidsfile + folder, 0o600)
         except:
             pass
+        self.logger.debug('Writing pastuids, {} origpastuids, newpastuids: {}'.format(len(origpastuids), newpastuids))
         struct = {
                 'uidvalidity': uidvalidity,
                 'uids': newpastuids + origpastuids
@@ -530,8 +533,8 @@ class ISBG:
             body = self.getmessage(u, newpastuids)
             # Unwrap spamassassin reports
             unwrapped = unwrap(BytesIO(body))
-            if unwrapped is not None:
-                body = unwrapped
+            if unwrapped is not None and len(unwrapped) > 0:
+                body = unwrapped[0]
 
             # Feed it to SpamAssassin in test mode
             if self.dryrun:
@@ -556,6 +559,7 @@ class ISBG:
                         score = m.group(1) + "/" + m.group(2) + "\n"
                     code = p.returncode
                 except:
+                    self.logger.exception('Error communicating with {}!'.format(self.satest))
                     continue
             if score == "0/0\n":
                 errorexit("spamc -> spamd error - aborting", exitcodespamc)
@@ -586,6 +590,7 @@ class ISBG:
                         try:
                             body = p.communicate(body)[0]
                         except:
+                            self.logger.exception('Error communicating with {}!'.format(self.sasave))
                             continue
                         p.stdin.close()
                         body = crnlify(body)
@@ -682,8 +687,8 @@ class ISBG:
                     body = self.getmessage(u)
                     # Unwrap spamassassin reports
                     unwrapped = unwrap(BytesIO(body))
-                    if unwrapped is not None:
-                        body = unwrapped
+                    if unwrapped is not None and len(unwrapped) > 0:
+                        body = unwrapped[0]
                     if self.dryrun:
                         out = self.alreadylearnt
                         code = 0
@@ -693,6 +698,8 @@ class ISBG:
                         try:
                             out = p.communicate(body)[0]
                         except:
+                            self.logger.exception('spamc error for mail {}'.format(u))
+                            self.logger.debug(repr(body))
                             continue
                         code = p.returncode
                         p.stdin.close()
@@ -791,6 +798,7 @@ class ISBG:
                                        self.passwordhash)
                     self.logger.debug("Successfully read password file")
                 except:
+                    self.logger.exception('Error reading pw!')
                     pass
 
             # do we have to prompt?
@@ -807,6 +815,7 @@ class ISBG:
                 try:
                     os.chmod(self.passwdfilename, 0o600)
                 except:
+                    self.logger.exception('Error saving pw!')
                     pass
                 f.write(hexof(self.setpw(imappasswd, passwordhash)))
                 f.close()
