@@ -420,6 +420,4 @@ With the great help of Anders Jenbo since v0.99.
 
 # License<a name="License"></a>
 
-As said by Roger Binns when he hang over isbg to Thomas Lecavelier: 
- " You may use isbg under any OSI approved open source license such as 
-those listed at [http://opensource.org/licenses/alphabetical](http://opensource.org/licenses/alphabetical) "
+This program is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt).
