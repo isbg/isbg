@@ -876,7 +876,7 @@ def isbg_run():
     isbg.parse_args()
     ch = logging.StreamHandler()
     isbg.logger.addHandler(ch)
-    if self.verbose:
+    if isbg.verbose:
         ch.setLevel(logging.DEBUG)
     else:
         ch.setLevel(logging.INFO)
