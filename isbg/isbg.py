@@ -38,6 +38,7 @@ Options:
     --learnthendestroy   Mark learnt messages for deletion
     --learnthenflag      Flag learnt messages
     --learnunflagged     Only learn if unflagged (for --learnthenflag)
+    --learnflagged       Only learn flagged
     --lockfilegrace #    Set the lifetime of the lock file to # (in minutes)
     --lockfilename file  Override the lock file name
     --maxsize numbytes   Messages larger than this will be ignored as they are
@@ -223,6 +224,7 @@ class ISBG:
             expunge=False
         )
         self.set_learning_opts(
+            learnflagged=False,
             learnunflagged=False,
             learnthendestroy=False,
             learnthenflag=False
@@ -300,7 +302,10 @@ class ISBG:
         self.flag = flag
         self.expunge = expunge
 
-    def set_learning_opts(self, learnunflagged, learnthendestroy, learnthenflag):
+    def set_learning_opts(self, learnflagged, learnunflagged, learnthendestroy, learnthenflag):
+        if learnflagged and learnunflagged:
+            raise ValueError('Cannot pass learnflagged and learnunflagged at same time')
+        self.learnflagged = learnflagged
         self.learnunflagged = learnunflagged
         self.learnthendestroy = learnthendestroy
         self.learnthenflag = learnthenflag
@@ -429,6 +434,7 @@ class ISBG:
         self.imaplist = self.opts.get('--imaplist', False)
 
         self.learnunflagged = self.opts.get('--learnunflagged', False)
+        self.learnflagged = self.opts.get('--learnflagged', False)
         self.learnthendestroy = self.opts.get('--learnthendestroy', False)
         self.learnthenflag = self.opts.get('--learnthendestroy', False)
         self.expunge = self.opts.get('--expunge', False)
@@ -676,6 +682,8 @@ class ISBG:
                 self.assertok(res, 'select', learntype['inbox'])
                 if self.learnunflagged:
                     typ, uids = self.imap.uid("SEARCH", None, "UNFLAGGED")
+                elif self.learnflagged:
+                    typ, uids = self.imap.uid("SEARCH", None, "(FLAGGED)")
                 else:
                     typ, uids = self.imap.uid("SEARCH", None, "ALL")
                 uids = uids[0].split()
