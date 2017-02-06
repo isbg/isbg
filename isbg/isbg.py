@@ -726,10 +726,10 @@ class ISBG:
                                 res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Deleted)")
                                 self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Deleted)")
                         elif learntype['moveto'] is not None:
-                            res = imap.uid("COPY", u, learntype['moveto'])
+                            res = self.imap.uid("COPY", u, learntype['moveto'])
                             self.assertok(res, "uid copy", u, learntype['moveto'])
                         elif self.learnthenflag:
-                            res = imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
+                            res = self.imap.uid("STORE", u, self.spamflagscmd, "(\\Flagged)")
                             self.assertok(res, "uid store", u, self.spamflagscmd, "(\\Flagged)")
                 self.pastuid_write(uidvalidity, origpastuids, newpastuids, folder=learntype['learntype'])
             result.append((n_tolearn, n_learnt))
