@@ -344,10 +344,10 @@ class ISBG:
 
     # Retrieve the entire message
     def getmessage(self, uid, append_to=None):
-        res = self.imap.uid("FETCH", uid, "(RFC822)")
-        self.assertok(res, 'uid fetch', uid, '(RFC822)')
+        res = self.imap.uid("FETCH", uid, "(BODY.PEEK[])")
+        self.assertok(res, 'uid fetch', uid, '(BODY.PEEK[])')
         if res[0] != "OK":
-            self.assertok(res, 'uid fetch', uid, '(RFC822)')
+            self.assertok(res, 'uid fetch', uid, '(BODY.PEEK[])')
             try:
                 body = res[1][0][1]
             except:
@@ -869,13 +869,13 @@ class ISBG:
         # List imap directories
         if self.imaplist:
             imap_list = self.imap.list()
-            if imap_list[0] == 'OK':
-                if sys.version_info.major >= 3:
-                    dirlist = ''.join([x.decode() for x in imap_list[1]])
-                else:
-                    dirlist = str(imap_list)
-                dirlist = re.sub('\(.*?\)| \".\" \"|\"\', \'', " ", dirlist)  # string formatting
-                self.logger.info(dirlist)
+            self.assertok(imap_list, "list")
+            if sys.version_info.major >= 3:
+                dirlist = str([x.decode() for x in imap_list[1]])
+            else:
+                dirlist = str(imap_list)
+            dirlist = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",dirlist) # string formatting
+            self.logger.info(dirlist)
 
         # Spamassassin training
         learned = self.spamlearn()
