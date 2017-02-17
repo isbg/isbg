@@ -860,9 +860,14 @@ class ISBG:
 
         # List imap directories
         if self.imaplist:
-            imap_list = str(self.imap.list())
-            imap_list = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",imap_list) # string formatting
-            self.logger.info(imap_list)
+            imap_list = self.imap.list()
+            if imap_list[0] == 'OK':
+                if sys.version_info.major >= 3:
+                    dirlist = ''.join([x.decode() for x in imap_list[1]])
+                else:
+                    dirlist = str(imap_list)
+                dirlist = re.sub('\(.*?\)| \".\" \"|\"\', \'', " ", dirlist)  # string formatting
+                self.logger.info(dirlist)
 
         # Spamassassin training
         learned = self.spamlearn()
