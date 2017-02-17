@@ -318,10 +318,7 @@ class ISBG:
     def getpw(self, data, hash):
         res = ""
         for i in range(0, self.passwordhashlen):
-            if isinstance(hash[i], int):
-                c = ord(data[i]) ^ hash[i]
-            else:
-                c = ord(data[i]) ^ ord(hash[i])
+            c = ord(data[i]) ^ hash[i]
             if c == 0:
                 break
             res = res + chr(c)
@@ -333,14 +330,10 @@ class ISBG:
                              store (max accepted is %d)"""
                              % (len(pw), self.passwordhashlen))
         res = list(hash)
-        if isinstance(res[0], int):
-            res = [chr(x) for x in res]
+        res = [chr(x) for x in res]
         for i in range(0, len(pw)):
             res[i] = chr(ord(res[i]) ^ ord(pw[i]))
-        try:
-            return string.join(res, '')
-        except:
-            return ''.join(res)
+        return ''.join(res)
 
     # Retrieve the entire message
     def getmessage(self, uid, append_to=None):
@@ -517,8 +510,7 @@ class ISBG:
         # get the uids of all mails with a size less then the maxsize
         typ, inboxuids = self.imap.uid("SEARCH", None, "SMALLER", str(self.maxsize))
         inboxuids = inboxuids[0].split()
-        if sys.version_info.major >= 3:
-            inboxuids = [x.decode() for x in inboxuids]
+        inboxuids = [x.decode() for x in inboxuids]
 
         # remember what pastuids looked like so that we can compare at the end
         origpastuids = self.pastuid_read(uidvalidity)
@@ -572,9 +564,7 @@ class ISBG:
                 else:
                     p = Popen(self.satest, stdin=PIPE, stdout=PIPE, close_fds=True)
                 try:
-                    score = p.communicate(body)[0]
-                    if sys.version_info.major >= 3:
-                        score = score.decode()
+                    score = p.communicate(body)[0].decode()
                     if not self.spamc:
                         m = re.search("score=(-?\d+(?:\.\d+)?) required=(\d+(?:\.\d+)?)",
                                       score)
@@ -823,10 +813,7 @@ class ISBG:
         if self.imappasswd is None:
             if self.savepw is False and os.path.exists(self.passwdfilename) is True:
                 try:
-                    if sys.version_info.major >= 3:
-                        self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read().decode()), self.passwordhash)
-                    else:
-                        self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read()), self.passwordhash)
+                    self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read().decode()), self.passwordhash)
                     self.logger.debug("Successfully read password file")
                 except:
                     self.logger.exception('Error reading pw!')
@@ -848,10 +835,7 @@ class ISBG:
             except:
                 self.logger.exception('Error saving pw!')
                 pass
-            if sys.version_info.major >= 3:
-                f.write(hexof(self.setpw(self.imappasswd, self.passwordhash)).encode())
-            else:
-                f.write(hexof(self.setpw(self.imappasswd, self.passwordhash)))
+            f.write(hexof(self.setpw(self.imappasswd, self.passwordhash)).encode())
             f.close()
 
 
@@ -870,10 +854,7 @@ class ISBG:
         if self.imaplist:
             imap_list = self.imap.list()
             self.assertok(imap_list, "list")
-            if sys.version_info.major >= 3:
-                dirlist = str([x.decode() for x in imap_list[1]])
-            else:
-                dirlist = str(imap_list)
+            dirlist = str([x.decode() for x in imap_list[1]])
             dirlist = re.sub('\(.*?\)| \".\" \"|\"\', \''," ",dirlist) # string formatting
             self.logger.info(dirlist)
 
