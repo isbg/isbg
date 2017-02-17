@@ -49,7 +49,7 @@ Options:
                          copied to your spam folder
     --nostats            Don't print stats
     --partialrun num     Stop operation after scanning 'num' unseen emails
-    --passwdfilename     Use a file to supply the password
+    --passwdfilename fn  Use a file to supply the password
     --savepw             Store the password to be used in future runs
     --spamc              Use spamc instead of standalone SpamAssassin binary
     --spaminbox mbox     Name of your spam folder
@@ -318,7 +318,10 @@ class ISBG:
     def getpw(self, data, hash):
         res = ""
         for i in range(0, self.passwordhashlen):
-            c = ord(data[i]) ^ ord(hash[i])
+            if isinstance(hash[i], int):
+                c = ord(data[i]) ^ hash[i]
+            else:
+                c = ord(data[i]) ^ ord(hash[i])
             if c == 0:
                 break
             res = res + chr(c)
@@ -330,9 +333,14 @@ class ISBG:
                              store (max accepted is %d)"""
                              % (len(pw), self.passwordhashlen))
         res = list(hash)
+        if isinstance(res[0], int):
+            res = [chr(x) for x in res]
         for i in range(0, len(pw)):
             res[i] = chr(ord(res[i]) ^ ord(pw[i]))
-        return string.join(res, '')
+        try:
+            return string.join(res, '')
+        except:
+            return ''.join(res)
 
     # Retrieve the entire message
     def getmessage(self, uid, append_to=None):
@@ -429,6 +437,7 @@ class ISBG:
         self.verbose_mails = self.opts.get('--verbose-mails', False)
         self.ignorelockfile = self.opts.get("--ignorelockfile", False)
         self.savepw = self.opts.get('--savepw', False)
+        self.passwdfilename = self.opts.get('--passwdfilename', self.passwdfilename);
 
         self.nossl = self.opts.get('--nossl', False)
         self.imaplist = self.opts.get('--imaplist', False)
@@ -802,8 +811,10 @@ class ISBG:
         if self.imappasswd is None:
             if self.savepw is False and os.path.exists(self.passwdfilename) is True:
                 try:
-                    self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read()),
-                                       self.passwordhash)
+                    if sys.version_info.major >= 3:
+                        self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read().decode()), self.passwordhash)
+                    else:
+                        self.imappasswd = self.getpw(dehexof(open(self.passwdfilename, "rb").read()), self.passwordhash)
                     self.logger.debug("Successfully read password file")
                 except:
                     self.logger.exception('Error reading pw!')
@@ -813,20 +824,23 @@ class ISBG:
             if self.imappasswd is None:
                 if not self.interactive:
                     errorexit("""You need to specify your imap password and save it
-                              with the --savepw switch""", exitcodeok)
+                              with the --savepw switch""", self.exitcodeok)
                 self.imappasswd = getpass.getpass("IMAP password for %s@%s: "
-                                             % (self.imapuser, self.imaphost))
+                                                  % (self.imapuser, self.imaphost))
 
-            # Should we save it?
-            if self.savepw:
-                f = open(self.passwdfilename, "wb+")
-                try:
-                    os.chmod(self.passwdfilename, 0o600)
-                except:
-                    self.logger.exception('Error saving pw!')
-                    pass
-                f.write(hexof(self.setpw(imappasswd, passwordhash)))
-                f.close()
+        # Should we save it?
+        if self.savepw:
+            f = open(self.passwdfilename, "wb+")
+            try:
+                os.chmod(self.passwdfilename, 0o600)
+            except:
+                self.logger.exception('Error saving pw!')
+                pass
+            if sys.version_info.major >= 3:
+                f.write(hexof(self.setpw(self.imappasswd, self.passwordhash)).encode())
+            else:
+                f.write(hexof(self.setpw(self.imappasswd, self.passwordhash)))
+            f.close()
 
 
         # Main code starts here
