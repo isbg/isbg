@@ -1,0 +1,35 @@
+# ########################################################################## #
+# pre-commit hooks configuration files                                       #
+# ########################################################################## #
+#
+# Note: If pre-commit has been installed with pip install, you can run the
+# hooks using:
+# ~/.local/bin/pre-commit run --all-files
+#
+# See: https://pre-commit.com/
+
+
+repos:
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v1.1.1
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: autopep8-wrapper
+    -   id: flake8
+        exclude: >
+          (?x)^(
+              docs/conf.py
+          )$
+
+-   repo: git://github.com/pre-commit/mirrors-pylint
+    rev: v1.8.3
+    hooks:
+    -   id: pylint
+        language: system
+        args: [--errors-only]
+
+-   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
+    rev: v2.1.1
+    hooks:
+    -   id: pydocstyle
