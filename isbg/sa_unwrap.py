@@ -4,7 +4,7 @@
 r"""
 Parse an *rfc2822* email message and unwrap it if contains spam attached.
 
-To know it it chechks for an x-spam-type=original payload.
+To know it it checks for an x-spam-type=original payload.
 
 Works on python 2.7+ and 3.x (uses some fairly ugly hacks to do so)
 

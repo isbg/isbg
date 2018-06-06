@@ -119,7 +119,7 @@ OPTIONS
 **--spamc**
     Use spamc instead of standalone SpamAssassin binary
 **--spaminbox** *mbox*
-    Name of your spam folder [Default: *INBOX.spam*]
+    Name of your spam folder [Default: *INBOX.Spam*]
 **--nossl**
     Don't use SSL to connect to the IMAP server
 **--teachonly**

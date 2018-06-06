@@ -115,7 +115,7 @@ Command line Options::
   --spamc                Use spamc instead of standalone SpamAssassin
                          binary.
   --spaminbox mbox       Name of your spam folder
-                         [Default: INBOX.spam].
+                         [Default: INBOX.Spam].
   --nossl                Don't use SSL to connect to the IMAP server.
   --teachonly            Don't search spam, just learn from folders.
   --trackfile file       Override the trackfile name.
