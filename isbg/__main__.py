@@ -208,8 +208,6 @@ def parse_args(sbg):
 
     sbg.trackfile = opts.get('--trackfile', sbg.trackfile)
 
-    #: ..v2.0: partialrun now has a default value of 50, use 0 if not
-    #:         partialrun shoud be used.
     sbg.partialrun = opts.get('--partialrun', sbg.partialrun)
     try:
         sbg.partialrun = int(opts["--partialrun"])
