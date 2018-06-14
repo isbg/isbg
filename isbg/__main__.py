@@ -115,7 +115,7 @@ Command line Options::
   --spamc                Use spamc instead of standalone SpamAssassin
                          binary.
   --spaminbox mbox       Name of your spam folder
-                         [Default: INBOX.spam].
+                         [Default: INBOX.Spam].
   --nossl                Don't use SSL to connect to the IMAP server.
   --teachonly            Don't search spam, just learn from folders.
   --trackfile file       Override the trackfile name.
@@ -208,8 +208,6 @@ def parse_args(sbg):
 
     sbg.trackfile = opts.get('--trackfile', sbg.trackfile)
 
-    #: ..v2.0: partialrun now has a default value of 50, use 0 if not
-    #:         partialrun shoud be used.
     sbg.partialrun = opts.get('--partialrun', sbg.partialrun)
     try:
         sbg.partialrun = int(opts["--partialrun"])

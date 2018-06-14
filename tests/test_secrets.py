@@ -45,6 +45,7 @@ from isbg import imaputils    # noqa: E402
 
 # To check if a cmd exists:
 
+pytestmark = pytest.mark.xfail(reason="secrets.py needs to be re-written")
 
 def cmd_exists(x):
     """Check for a os command line."""

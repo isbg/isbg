@@ -23,7 +23,7 @@
 
 """Imap secrets module for isbg - IMAP Spam Begone.
 
-.. versionadded:: 2.0.0
+.. versionadded:: 2.1.0
 """
 
 from __future__ import absolute_import
@@ -181,7 +181,7 @@ class SecretIsbg(Secret):
             json_data = {}
 
         if key in json_data:
-            return self._deobfuscate(utils.dehexof(json_data[key]))
+            return json_data[key]
         else:
             return None
 
@@ -211,7 +211,7 @@ class SecretIsbg(Secret):
         if key in json_data and not overwrite:
             raise ValueError("Key '%s' exists." % key)
 
-        json_data[key] = utils.hexof(self._obfuscate(value))
+        json_data[key] = value
 
         SecretIsbg._store_data(self.filename, json_data)
 

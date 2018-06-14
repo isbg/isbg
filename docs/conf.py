@@ -35,10 +35,8 @@ copyright = u'''License GPLv3: GNU GPL version 3 https://gnu.org/licenses/gpl.ht
 This is free software: you are free to change and redistribute it. There is
 NO WARRANTY, to the extent permitted by law.'''
 
-author = u'''This software was mainly written Roger Binns <rogerb@rogerbinns.com> and
-maintained by Thomas Lecavelier <thomas@lecavelier.name> since novembre
-2009, and maintained by Carles Muñoz Gorriz <carlesmu@internautas.org>
-since march 2018.'''
+author = u'''See the CONTRIBUTORS file in the git repository for more
+information on who wrote and maintains this software'''
 
 # We get the version from isbg/isbg.py
 _VERSION_RE = re.compile(r'__version__\s+=\s+(.*)')

@@ -59,7 +59,7 @@ def mail_content(mail):
         message. In python 3 it returns `bytes`.
 
     Raises:
-        email.errors.MessageError:  if mail is not *bytes* nor *str*.
+        email.errors.MessageError:  if mail is neither *bytes* nor *str*.
 
     """
     if not isinstance(mail, email.message.Message):
@@ -330,8 +330,8 @@ class ImapSettings(object):
 
         #: Inbox folder, default to ```INBOX```.
         self.inbox = 'INBOX'
-        #: Spam folder, default to ```INBOX.spam```.
-        self.spaminbox = 'INBOX.spam'
+        #: Spam folder, default to ```INBOX.Spam```.
+        self.spaminbox = 'INBOX.Spam'
 
         self.learnspambox = None     #: Folder used to learn spam messages.
         self.learnhambox = None      #: Folder used to learn non-spam messages.

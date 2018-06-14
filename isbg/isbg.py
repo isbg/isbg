@@ -60,7 +60,7 @@ Note:
 """
 
 
-__version__ = "2.0.0"  #: The current isbg version
+__version__ = "2.1.0"  #: The current isbg version
 
 __license__ = \
     """License GPLv3: GNU GPL version 3 https://gnu.org/licenses/gpl.html
@@ -150,8 +150,8 @@ class ISBG(object):
         >>> sbg.imapsets.user = "example@example.org"
         >>> sbg.imapsets.passwd = "xxxxxxxx"
         >>> sbg.imapsets.inbox = "INBOX"
-        >>> sbg.imapsets.spaminbox = "Spam"
-        >>> sbg.imapsets.learnspambox = "Spam"
+        >>> sbg.imapsets.spaminbox = "INBOX.Spam"
+        >>> sbg.imapsets.learnspambox = "INBOX.Spam"
         >>> sbg.imapsets.learnhambox = "NOSPAM"
         >>> # Set the number of mails to chech
         >>> sbg.partialrun = 4        # Only check 4 mails for every proc.
@@ -265,7 +265,7 @@ class ISBG(object):
         self.imapsets = imaputils.ImapSettings()
         self.imap = None
 
-        # FIXME: This could be used when non runed interactivaly, may be with
+        # FIXME: This could be used when ran non-interactively, maybe with
         # the --noninteractive argument (instead of the addHandler:
         # logging.basicConfig(
         #    format=('%(asctime)s %(levelname)-8s [%(filename)s'
