@@ -1,0 +1,13 @@
+# crontab example for isbg package. It runs each 30 minuts.
+# You should arrange it to yours needs.
+# We redirect the stdout and stderr to logger (with different priority)
+# to check the cron calls (6/info)   : journalctl -p 6..6 |grep :isbg
+# to check the output     (5/notice) : journalctl -p 5..5 |grep :isbg
+# to check errors         (4/warning): journalctl -p 4..4 |grep :isbg
+ISBG_IMAPHOST=<your imap host>
+ISBG_IMAPUSER=<your user name>
+ISBG_SPAMINBOX=Spam
+ISBG_LEARNSPAMBOX=Spam
+ISBG_LEARNHAMBOX=NOSPAM
+ISBG_PARTIALRUN=25
+20,50 *  *  *  * test -x /usr/bin/isbg && sh -c "/usr/bin/isbg --imaphost $ISBG_IMAPHOST --imapuser $ISBG_IMAPUSER --partialrun $ISBG_PARTIALRUN --spaminbox $ISBG_SPAMINBOX --learnspambox $ISBG_LEARNSPAMBOX --delete --expunge --learnhambox $ISBG_LEARNHAMBOX --noninteractive | /usr/bin/tr '\n' ' ' | /usr/bin/logger -p cron.notice -t cron:$LOGNAME:isbg" 2>&1 | /usr/bin/logger -p cron.warning -t cron:$LOGNAME:isbg

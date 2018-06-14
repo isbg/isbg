@@ -1,0 +1,38 @@
+env:
+  global:
+
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+# Pypy version:
+  - "pypy"
+  - "pypy3"
+
+before_script:
+
+# command to install dependencies
+install:
+  - pip install -r requirements-build.txt # install build requiriments
+  - pip install -r requirements.txt       # install requirements
+  - python setup.py install               # install isbg package
+  - pip install coverage
+  - pip install codecov             # for codecov
+  - pip install pytest-cov          # for codecov usage
+  - pip install codacy-coverage     # for codacy coverage
+
+# command to run tests
+script:
+  - python setup.py bdist       # create binary distribution
+  - python setup.py sdist       # create source distribution
+  - pytest --cov-append --cov=isbg tests/   # for codecov usage
+
+after_script:
+  - coverage xml                            # for codeclimate
+  - python-codacy-coverage -r coverage.xml  # for cadacy
+  - codecov                                 # codecov.io suport
+
+after_success:
+  - isbg --version                          # show isbg version
