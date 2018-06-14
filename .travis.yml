@@ -4,11 +4,9 @@ env:
 language: python
 
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
 # Pypy version:
-  - "pypy"
   - "pypy3"
 
 before_script:
