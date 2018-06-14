@@ -1,0 +1,4 @@
+docopt==0.6.2
+chardet
+typing
+xdg
