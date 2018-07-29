@@ -74,7 +74,7 @@ setup(
     keywords='email imap spamassasin filter',
     author='Thomas Lecavelier',
     author_email='thomas@lecavelier.name',
-    license='See LICENCE file.',
+    license='GPLv3',
     packages=['isbg'],
     entry_points={
         'console_scripts': [
@@ -100,7 +100,7 @@ setup(
         'Environment :: Console',
         'Intended Audience :: System Administrators',
         'Intended Audience :: End Users/Desktop',
-        'License :: OSI Approved',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
