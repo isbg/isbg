@@ -1,7 +1,3 @@
-.. isbg documentation master file, initially created by
-   pandoc --from=markdown_github --to=rst --output=README.rst README.md
-
-
 IMAP Spam Begone
 ================
 
