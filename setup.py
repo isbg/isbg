@@ -72,8 +72,8 @@ setup(
         + 'SpamAssassin and get your spam moved to another folder.'),
     long_description=LDESC,
     keywords='email imap spamassasin filter',
-    author='Thomas Lecavelier',
-    author_email='thomas@lecavelier.name',
+    author='ISBG contributors (see CONTRIBUTORS file)',
+    author_email='isbg@python.org',
     license='GPLv3',
     packages=['isbg'],
     entry_points={
