@@ -14,10 +14,8 @@ You can read the full documentation in `Read the docs`_.
 
 .. _Read the docs: https://isbg.readthedocs.io/
 
-.. only:: html
-
-    .. contents:: Table of Contents
-       :depth: 3
+.. contents:: Table of Contents
+   :depth: 3
 
 Features
 --------
