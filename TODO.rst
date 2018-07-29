@@ -1,22 +1,17 @@
 Todo list
 =========
 
-High priority
--------------
-* ☐ Delete the semi-encryption of passwords (Security through obscurity !=
-  security) and use `keyring` to store and retrieve them.
-
 Other stuff
 -----------
 * ☐ Export documentation.
 * ☐ Add documentation about development.
 * ☐ Easily upload to pypi.
 * ☐ Auto report messages to Razor (high scoring ones that are definitely spam)
-* ☐ Seperate out messages that may be false positives (scores close to
-  SpamAssassin thresholds) from the definite spam ones.
+* ☐ Separate out messages that may be false positives (scores close to
+    SpamAssassin thresholds) from the definite spam ones.
 * ☐ Add documentation for the crontab usage.
 * ☐ Remove the *SpamAssassin* report from a mail when it is in the `ham`
-  folder.
+    folder.
 
 Notes
 ^^^^^
