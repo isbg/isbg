@@ -4,6 +4,9 @@ News [#]_
 Unreleased
 ----------
 
+New in 2.1.0
+~~~~~~~~~~~
+
 * Use of standard localization folders. You must store your password again.
 * Added documentation in `Read the docs`__.
 * Added a default `--partialrun` of 50.
