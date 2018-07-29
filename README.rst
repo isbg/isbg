@@ -351,9 +351,8 @@ the further developement of **isbg**.
 
 You can also hang out with us on IRC, at ``#isbg`` on Freenode.
 
-This software was written by Roger Binns <rogerb@rogerbinns.com> and is
-maintained by Thomas Lecavelier <thomas@lecavelier.name> since november 2009
-with the great help of Anders Jenbo since v0.99.
+See the CONTRIBUTORS file in the git repository for more information on who
+wrote and maintains this software.
 
 .. _isbg mailing list: https://mail.python.org/mm3/mailman3/lists/isbg.python.org/
 
