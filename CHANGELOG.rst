@@ -6,6 +6,12 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.1.1 (201808729)
+----------------------
+
+* Fix documentation
+* Update setup.py in order to upload to PyPi
+
 isbg 2.1.0 (20180614)
 ---------------------
 
