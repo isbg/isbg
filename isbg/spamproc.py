@@ -331,7 +331,8 @@ class SpamAssassin(object):
                 mail = unwrapped[0]
 
             if self.dryrun:
-                code, code_orig = (0, 0)
+                self.logger.warning("Skipped learning due to dryrun!")
+                continue
             else:
                 code, code_orig = learn_mail(mail, learn_type)
 
