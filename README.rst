@@ -30,7 +30,6 @@ Features
    that can contact your IMAP server
 -  Highly configurable
 -  Sensible defaults so you don't have to do any configuring :-)
--  Compatibility with Python 2.7, 3.5, 3.6
 -  Possibility to skip spam detection to stick only to the teach feature
 -  Don't fail when meeting horrible and bad formed mail
 -  Lock file to prevent multiple instance to run at the same time (for
@@ -78,12 +77,8 @@ From the main directory where you have download isbg, run::
 
     $ python setup.py install --record installed_files.txt
 
-It will install under ``/usr/local/``. Supposing that you are using Python 2.7,
-the package module should be in ``/usr/local/lib/python2.7/dist-packages/`` and
-the main script will be ``/usr/local/bin/isbg``.
-
-In ``installed_files.txt`` there should be the list of files installed. To
-uninstall them, use::
+It will install under ``/usr/local/``. In ``installed_files.txt`` there should
+be the list of files installed. To uninstall them, use::
 
     $ tr '\n' '\0' < installed_files.txt | xargs -0 rm -vf --
 
