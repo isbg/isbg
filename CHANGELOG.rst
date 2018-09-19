@@ -6,6 +6,12 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.1.2 (20180917)
+---------------------
+
+* fix a bug with the interaction between --learnspambox and --dryrun
+* remove mention of Python 2 in the docs
+
 isbg 2.1.1 (201808729)
 ----------------------
 
