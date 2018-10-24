@@ -92,57 +92,40 @@ def learn_mail(mail, learn_type):
     return code, orig_code
 
 
+def exec_spamassassin(mail, spamc=False, cmd=False):
+    """Call local spamassassin."""
+    if cmd:
+        satest = cmd
+    elif spamc:
+        satest = ["spamc", "-E"]
+    else:
+        satest = ["spamassassin", "--exit-code"]
+
+    proc = utils.popen(satest)
+
+    spamassassin_result = proc.communicate(imaputils.mail_content(mail)
+                                           )[0].decode(errors='ignore')
+    returncode = proc.returncode
+
+    proc.stdin.close()
+
+    return spamassassin_result, returncode
+
+
 def test_mail(mail, spamc=False, cmd=False):
     """Test a email with spamassassin."""
     score = "0/0\n"
     orig_code = None
 
-    cmd_score = ["spamassassin", "--exit-code"]
-    if cmd:
-        satest = cmd
-    elif spamc:
-        satest = ["spamc", "-c"]
-    else:
-        satest = ["spamassassin", "--exit-code"]
-
-    proc = utils.popen(satest)
     try:
-        score = proc.communicate(imaputils.mail_content(mail)
-                                 )[0].decode(errors='ignore')
-        if cmd_score == satest:
-            score = utils.score_from_mail(score)
-        orig_code = proc.returncode
+        spamassassin_result, returncode = exec_spamassassin(mail, spamc, cmd)
+        score = utils.score_from_mail(spamassassin_result)
+        orig_code = returncode
 
     except Exception:  # pylint: disable=broad-except
         score = "-9999"
 
-    proc.stdin.close()
-
-    return score, orig_code
-
-
-def feed_mail(mail, spamc=False, cmd=False):
-    """Feed a email with spamassassin report."""
-    new_mail = ""
-    orig_code = None
-
-    if cmd:
-        sasave = cmd
-    elif spamc:
-        sasave = ["spamc"]
-    else:
-        sasave = ["spamassassin"]
-
-    proc = utils.popen(sasave)
-    try:
-        new_mail = proc.communicate(imaputils.mail_content(mail))[0]
-        orig_code = proc.returncode
-    except Exception:  # pylint: disable=broad-except
-        new_mail = u"-9999"
-
-    proc.stdin.close()
-
-    return new_mail, orig_code
+    return score, orig_code, spamassassin_result
 
 
 class Sa_Learn(object):
@@ -224,7 +207,7 @@ class SpamAssassin(object):
     def cmd_test(self):
         """Is the command to use to test if the message is spam."""
         if self.spamc:  # pylint: disable=no-member
-            return ["spamc", "-c"]
+            return ["spamc", "-E"]
         return ["spamassassin", "--exit-code"]
 
     @classmethod
@@ -384,7 +367,7 @@ class SpamAssassin(object):
 
         return sa_learning
 
-    def _process_spam(self, uid, score, mail, spamdeletelist):
+    def _process_spam(self, uid, score, mail, spamdeletelist, code, spamassassin_result):
         self.logger.debug(__("{} is spam".format(uid)))
 
         if (self.deletehigherthan is not None and
@@ -397,7 +380,7 @@ class SpamAssassin(object):
             if self.dryrun:
                 self.logger.info("Skipping report because of --dryrun")
             else:
-                new_mail, code = feed_mail(mail, cmd=self.cmd_save)
+                new_mail = spamassassin_result
                 if new_mail == u"-9999":
                     self.logger.exception(
                         '{} error for mail {} (ret code {})'.format(
@@ -481,7 +464,7 @@ class SpamAssassin(object):
                     code = 0
                 processednum = processednum + 1
             else:
-                score, code = test_mail(mail, cmd=self.cmd_test)
+                score, code, spamassassin_result = test_mail(mail, cmd=self.cmd_test)
                 if score == "-9999":
                     self.logger.exception(__(
                         '{} error for mail {}'.format(self.cmd_test, uid)))
@@ -499,7 +482,7 @@ class SpamAssassin(object):
             if code != 0:
                 # Message is spam, delete it or move it to spaminbox
                 # (optionally with report)
-                if not self._process_spam(uid, score, mail, spamdeletelist):
+                if not self._process_spam(uid, score, mail, spamdeletelist, code, spamassassin_result):
                     continue
                 spamlist.append(uid)
 
