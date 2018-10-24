@@ -6,6 +6,12 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.1.3 (20181024)
+--------------------
+
+* don't build the documentation during the install
+* fix pip builds
+
 isbg 2.1.2 (20180917)
 ---------------------
 
