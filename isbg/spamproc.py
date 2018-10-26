@@ -92,8 +92,13 @@ def learn_mail(mail, learn_type):
     return code, orig_code
 
 
-def exec_spamassassin(mail, spamc=False, cmd=False):
-    """Call local spamassassin."""
+def test_mail(mail, spamc=False, cmd=False):
+    """Test a email with spamassassin."""
+    score = "0/0\n"
+    orig_code = None
+    spamassassin_result = None
+    returncode = None
+
     if cmd:
         satest = cmd
     elif spamc:
@@ -103,29 +108,17 @@ def exec_spamassassin(mail, spamc=False, cmd=False):
 
     proc = utils.popen(satest)
 
-    spamassassin_result = proc.communicate(imaputils.mail_content(mail)
-                                           )[0].decode(errors='ignore')
-    returncode = proc.returncode
-
-    proc.stdin.close()
-
-    return spamassassin_result, returncode
-
-
-def test_mail(mail, spamc=False, cmd=False):
-    """Test a email with spamassassin."""
-    score = "0/0\n"
-    orig_code = None
-
     try:
-        spamassassin_result, returncode = exec_spamassassin(mail, spamc, cmd)
+        spamassassin_result = proc.communicate(imaputils.mail_content(mail)
+                                               )[0].decode(errors='ignore')
+        returncode = proc.returncode
+        proc.stdin.close()
         score = utils.score_from_mail(spamassassin_result)
-        orig_code = returncode
 
     except Exception:  # pylint: disable=broad-except
         score = "-9999"
 
-    return score, orig_code, spamassassin_result
+    return score, returncode, spamassassin_result
 
 
 class Sa_Learn(object):
