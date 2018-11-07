@@ -14,8 +14,8 @@ from __future__ import unicode_literals
 
 
 from .isbg import ISBG, ISBGError, __version__, __exitcodes__, __license__
-from .spamproc import learn_mail, test_mail, feed_mail
+from .spamproc import learn_mail, test_mail
 from .sa_unwrap import unwrap
 
 __all__ = ["__version__", "__exitcodes__", "__license__", "learn_mail",
-           "test_mail", "feed_mail", "unwrap", "ISBG", "ISBGError"]
+           "test_mail", "unwrap", "ISBG", "ISBGError"]
