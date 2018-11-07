@@ -1,0 +1,11 @@
+# Python issue #11975
+
+py:class boolean
+py:class optional
+py:class str | bytes
+
+# ISBG
+
+py:class FILE_TYPES
+py:func cchardet.detect
+py:func chardet.detect
