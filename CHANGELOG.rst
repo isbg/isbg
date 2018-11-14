@@ -9,7 +9,7 @@ Unreleased
 * run spamassassin only once per mail check (thanks to rsmuc)
 
 isbg 2.1.3 (20181024)
---------------------
+---------------------
 
 * don't build the documentation during the install
 * fix pip builds
