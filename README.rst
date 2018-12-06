@@ -1,7 +1,7 @@
 IMAP Spam Begone
 ================
 
-**isbg** is a script and a python module that makes it easy to scan an
+**isbg** is a script and a python 3 module that makes it easy to scan an
 IMAP inbox for spam using *SpamAssassin* and get your spam moved to another
 folder.
 
@@ -16,6 +16,10 @@ You can read the full documentation in `Read the docs`_.
 
 .. contents:: Table of Contents
    :depth: 3
+
+Support
+-------
+Please note, the current release of isbg **only supports python 3**. Python 2 is compatile with older releases.
 
 Features
 --------
