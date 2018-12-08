@@ -6,7 +6,12 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.1.4 (20181207)
+---------------------
+
 * run spamassassin only once per mail check (thanks to rsmuc)
+* documentation and example fixes (thanks to DrTexxOfficial)
+* make --imaplist actually work
 
 isbg 2.1.3 (20181024)
 ---------------------
