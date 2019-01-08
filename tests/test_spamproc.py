@@ -89,7 +89,8 @@ def test_test_mail():
     if cmd_exists('spamc'):
         # We test the mail with spamc:
         score1, code1, spamassassin_result = spamproc.test_mail(mail, True)
-        score2, code2, spamassassin_result = spamproc.test_mail(mail, cmd=["spamc", "-E"])
+        score2, code2, spamassassin_result = spamproc.test_mail(mail, cmd=["spamc",
+                                                     "-E", "--max-size=268435450"])
         assert score1 == score2, "The score should be the same."
         assert code1 == code2, "The return code should be the same."
         score, code, spamassassin_result = spamproc.test_mail("", True)
@@ -101,7 +102,7 @@ def test_test_mail():
             spamproc.test_mail(mail, True)
         with pytest.raises(OSError, match="No such file",
                            message="Should rise OSError."):
-            spamproc.test_mail(mail, cmd=["spamc", "-E"])
+            spamproc.test_mail(mail, cmd=["spamc", "-E", "--max-size=268435450"])
 
     if cmd_exists('spamassassin'):
         # We test the mail with spamassassin:
@@ -196,7 +197,7 @@ class Test_SpamAssassin(object):
         sa = spamproc.SpamAssassin()
         assert sa.cmd_test == ["spamassassin", "--exit-code"]
         sa.spamc = True
-        assert sa.cmd_test == ["spamc", "-E"]
+        assert sa.cmd_test == ["spamc", "-E", "--max-size=268435450"]
         sa.spamc = False
         assert sa.cmd_test == ["spamassassin", "--exit-code"]
 
