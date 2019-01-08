@@ -490,6 +490,7 @@ class ISBG(object):
 
         """
         sa = spamproc.SpamAssassin.create_from_isbg(self)
+        proc = None
 
         # SpamAssassin training: Learn spam
         s_learned = spamproc.Sa_Learn()
