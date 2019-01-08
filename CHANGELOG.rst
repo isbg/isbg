@@ -6,6 +6,8 @@ What has been done since last release.
 Unreleased
 ----------
 
+* fix an issue with --teachonly (thanks to rsmuc)
+
 isbg 2.1.4 (20181207)
 ---------------------
 
