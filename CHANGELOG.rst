@@ -6,7 +6,11 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.1.5 (20190109)
+---------------------
+
 * fix an issue with --teachonly (thanks to rsmuc)
+* fix an issue with spamc and message size
 
 isbg 2.1.4 (20181207)
 ---------------------
