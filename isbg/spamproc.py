@@ -102,7 +102,8 @@ def test_mail(mail, spamc=False, cmd=False):
     if cmd:
         satest = cmd
     elif spamc:
-        satest = ["spamc", "-E"]
+        # let spamc process mails larger than 500 KB if ISBG forwards them
+        satest = ["spamc", "-E", "--max-size=268435450"]
     else:
         satest = ["spamassassin", "--exit-code"]
 
@@ -199,7 +200,7 @@ class SpamAssassin(object):
     def cmd_test(self):
         """Is the command to use to test if the message is spam."""
         if self.spamc:  # pylint: disable=no-member
-            return ["spamc", "-E"]
+            return ["spamc", "-E", "--max-size=268435450"]
         return ["spamassassin", "--exit-code"]
 
     @classmethod
