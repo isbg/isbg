@@ -2,10 +2,12 @@ env:
   global:
 
 language: python
+dist: xenial
 
 python:
   - "3.5"
   - "3.6"
+  - "3.7"
 # Pypy version:
   - "pypy3"
 
