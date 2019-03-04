@@ -121,7 +121,7 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
         # Test with a erroneous filename.
         sec = secrets.SecretIsbg(filename="", imapset=imapset)
         assert sec.get("foo") is None
-        with pytest.raises(EnvironmentError, match="\[Errno "):
+        with pytest.raises(EnvironmentError, match=r"\[Errno "):
             sec.set("foo", "boo")
             pytest.fail("A EnvironmentError should be raised.")
 
@@ -159,7 +159,7 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
         # Remove last key, it should delete the file:
         sec.delete("foo3")
         assert sec.get("foo3") is None
-        with pytest.raises(EnvironmentError, match="\[Errno 2\]"):
+        with pytest.raises(EnvironmentError, match=r"\[Errno 2\]"):
             os.remove("tmp.txt")
             pytest.fail("A EnvironmentError should be raised.")
 
