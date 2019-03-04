@@ -121,9 +121,9 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
         # Test with a erroneous filename.
         sec = secrets.SecretIsbg(filename="", imapset=imapset)
         assert sec.get("foo") is None
-        with pytest.raises(EnvironmentError, match="\[Errno ",
-                           message="A EnvironmentError should be raised."):
+        with pytest.raises(EnvironmentError, match="\[Errno "):
             sec.set("foo", "boo")
+            pytest.fail("A EnvironmentError should be raised.")
 
         # Test with a ok filename:
         sec = secrets.SecretIsbg(filename="tmp.txt", imapset=imapset)
@@ -134,15 +134,15 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
         sec.set("foo3", "boo4")
         assert sec.get("foo3") == "boo4"
 
-        with pytest.raises(ValueError, match="Key 'foo3' exists.",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo3' exists."):
             sec.set("foo3", "boo5", overwrite=False)
+            pytest.fail("It should raise a ValueError")
 
         assert sec.get("foo3") == "boo4"
 
-        with pytest.raises(TypeError,
-                           message="A TypeError should be raised."):
+        with pytest.raises(TypeError):
             sec.set("foo4", 4)
+            pytest.fail("A TypeError should be raised.")
         assert sec.get("foo2") == "boo2"
 
         # Remove the created keys:
@@ -152,21 +152,21 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
         assert sec.get("foo2") is None
 
         # Remove non existant key:
-        with pytest.raises(ValueError, match="Key 'foo4' not",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo4' not"):
             sec.delete("foo4")
+            pytest.fail("It should raise a ValueError")
 
         # Remove last key, it should delete the file:
         sec.delete("foo3")
         assert sec.get("foo3") is None
-        with pytest.raises(EnvironmentError, match="\[Errno 2\]",
-                           message="A EnvironmentError should be raised."):
+        with pytest.raises(EnvironmentError, match="\[Errno 2\]"):
             os.remove("tmp.txt")
+            pytest.fail("A EnvironmentError should be raised.")
 
         # Remove non existant key in non existant file:
-        with pytest.raises(ValueError, match="Key 'foo4' not",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo4' not"):
             sec.delete("foo4")
+            pytest.fail("It should raise a ValueError")
 
 
 class Test_SecretKeyring(object):
@@ -185,9 +185,9 @@ class Test_SecretKeyring(object):
         sec.set("foo3", "boo4")
         assert sec.get("foo3") == "boo4"
 
-        with pytest.raises(ValueError, match="Key 'foo3' exists.",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo3' exists."):
             sec.set("foo3", "boo5", overwrite=False)
+            pytest.fail("It should raise a ValueError")
 
         # Remove the created keys:
         sec.delete("foo1")
@@ -196,14 +196,14 @@ class Test_SecretKeyring(object):
         assert sec.get("foo2") is None
 
         # Remove non existant key:
-        with pytest.raises(ValueError, match="Key 'foo4' not",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo4' not"):
             sec.delete("foo4")
+            pytest.fail("It should raise a ValueError")
 
         sec.delete("foo3")
         assert sec.get("foo3") is None
 
         # Remove non existant key:
-        with pytest.raises(ValueError, match="Key 'foo4' not",
-                           message="It should raise a ValueError"):
+        with pytest.raises(ValueError, match="Key 'foo4' not"):
             sec.delete("foo4")
+            pytest.fail("It should raise a ValueError")

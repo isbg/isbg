@@ -54,9 +54,9 @@ def test_hexof_dehexof():
     assert dehex == "P@*"
     assert utils.hexof(dehex) == "50402a"
     with pytest.raises(ValueError,
-                       match=repr("G") + " is not a valid hexadecimal digit",
-                       message="Not error or unexpected error message"):
+                       match=repr("G") + " is not a valid hexadecimal digit"):
         utils.dehexof("G")
+        pytest.fail("Not error or unexpected error message")
     dehex = utils.dehexof("50402a")
     assert dehex == "P@*"
     assert utils.hexof(dehex) == "50402a"
@@ -84,8 +84,9 @@ def test_score_from_mail():
     fmail = open('examples/spam.eml', 'rb')
     ftext = fmail.read()
     fmail.close()
-    with pytest.raises(AttributeError, message="Should rise AttributeError."):
+    with pytest.raises(AttributeError):
         ret = utils.score_from_mail(ftext.decode(errors='ignore'))
+        pytest.fail("Should rise AttributeError.")
     # With score:
     fmail = open('examples/spam.from.spamassassin.eml', 'rb')
     ftext = fmail.read()
@@ -120,22 +121,30 @@ def test_shorten():
         "Strings should be diferents."
 
     # Others:
-    with pytest.raises(TypeError, message="None should raise a TypeError."):
+    with pytest.raises(TypeError):
         utils.shorten(None, 8)
-    with pytest.raises(TypeError, message="None should raise a TypeError."):
+        pytest.fail("None should raise a TypeError.")
+    with pytest.raises(TypeError):
         utils.shorten(None, 7)
-    with pytest.raises(TypeError, message="None should raise a TypeError."):
+        pytest.fail("None should raise a TypeError.")
+    with pytest.raises(TypeError):
         utils.shorten(False, 8)
-    with pytest.raises(TypeError, message="None should raise a TypeError."):
+        pytest.fail("None should raise a TypeError.")
+    with pytest.raises(TypeError):
         utils.shorten(True, 7)
-    with pytest.raises(TypeError, message="int should raise a TypeError."):
+        pytest.fail("None should raise a TypeError.")
+    with pytest.raises(TypeError):
         utils.shorten(1, 7)
-    with pytest.raises(TypeError, message="float should raise a TypeError."):
+        pytest.fail("int should raise a TypeError.")
+    with pytest.raises(TypeError):
         utils.shorten(1.0, 7)
-    with pytest.raises(ValueError, message="length should be at least 1."):
+        pytest.fail("float should raise a TypeError.")
+    with pytest.raises(ValueError):
         utils.shorten("123", 0)
-    with pytest.raises(TypeError, message="int should be not supported."):
+        pytest.fail("length should be at least 1.")
+    with pytest.raises(TypeError):
         assert utils.shorten([1, 2, 3], 2)
+        pytest.fail("int should be not supported.")
     assert utils.shorten(["111", "2", "3"], 3) == ["111", "2", "3"]
     assert utils.shorten(("111", "2", "3"), 3) == ("111", "2", "3")
 

@@ -74,9 +74,9 @@ def test_learn_mail():
         assert ret is 6, "Mail should be already learned."
     else:
         # We forget the mail:
-        with pytest.raises(OSError, match="No such file",
-                           message="Should rise OSError."):
+        with pytest.raises(OSError, match="No such file"):
             spamproc.learn_mail(mail, 'forget')
+            pytest.fail("Should rise OSError.")
 
 
 def test_test_mail():
@@ -97,12 +97,12 @@ def test_test_mail():
         assert score == u'-9999', 'It should return a error'
         assert code is None, 'It should return a error'
     else:
-        with pytest.raises(OSError, match="No such file",
-                           message="Should rise OSError."):
+        with pytest.raises(OSError, match="No such file"):
             spamproc.test_mail(mail, True)
-        with pytest.raises(OSError, match="No such file",
-                           message="Should rise OSError."):
+            pytest.fail("Should rise OSError.")
+        with pytest.raises(OSError, match="No such file"):
             spamproc.test_mail(mail, cmd=["spamc", "-E", "--max-size=268435450"])
+            pytest.fail("Should rise OSError.")
 
     if cmd_exists('spamassassin'):
         # We test the mail with spamassassin:
@@ -115,20 +115,20 @@ def test_test_mail():
         assert score == u'-9999', 'It should return a error'
         assert code is None, 'It should return a error'
     else:
-        with pytest.raises(OSError, match="No such file",
-                           message="Should rise OSError."):
+        with pytest.raises(OSError, match="No such file"):
             spamproc.test_mail(mail, False)
-        with pytest.raises(OSError, match="No such file",
-                           message="Should rise OSError."):
+            pytest.fail("Should rise OSError.")
+        with pytest.raises(OSError, match="No such file"):
             spamproc.test_mail(mail, cmd=["spamassassin", "--exit-code"])
+            pytest.fail("Should rise OSError.")
 
     # We try a random cmds (existant and unexistant):
     score, code, spamassassin_result = spamproc.test_mail("", cmd=["echo"])
     assert score == u'-9999', 'It should return a error'
     assert code is None, 'It should return a error'
-    with pytest.raises(OSError, match="No such file",
-                       message="Should rise OSError."):
+    with pytest.raises(OSError, match="No such file"):
         spamproc.test_mail(mail, cmd=["_____fooo___x_x"])
+        pytest.fail("Should rise OSError.")
 
 
 class Test_Sa_Learn(object):
@@ -179,9 +179,9 @@ class Test_SpamAssassin(object):
         for k in self._kwargs:
             assert k in dir(sa)
 
-        with pytest.raises(TypeError, match="Unknown keyword",
-                           message="Should rise a error."):
+        with pytest.raises(TypeError, match="Unknown keyword"):
             sa = spamproc.SpamAssassin(imap2=0)
+            pytest.fail("Should rise a error.")
 
     def test_cmd_save(self):
         """Test cmd_save."""
@@ -211,13 +211,13 @@ class Test_SpamAssassin(object):
     def test_learn_checks(self):
         """Test learn checks."""
         sa = spamproc.SpamAssassin()
-        with pytest.raises(isbg.ISBGError, match="Unknown learn_type",
-                           message="Should rise error."):
+        with pytest.raises(isbg.ISBGError, match="Unknown learn_type"):
             sa.learn('Spam', '', None, [])
+            pytest.fail("Should rise error.")
 
-        with pytest.raises(isbg.ISBGError, match="Imap is required",
-                           message="Should rise error."):
+        with pytest.raises(isbg.ISBGError, match="Imap is required"):
             sa.learn('Spam', 'ham', None, [])
+            pytest.fail("Should rise error.")
 
     def test_get_formated_uids(self):
         """Test get_formated_uids."""
@@ -256,9 +256,9 @@ class Test_SpamAssassin(object):
         sa = spamproc.SpamAssassin.create_from_isbg(sbg)
 
         # OSError required when it's run without spamassassin (travis-cl)
-        with pytest.raises((AttributeError, OSError, MessageError),
-                           message="Should rise error, IMAP not created."):
+        with pytest.raises((AttributeError, OSError, MessageError)):
             sa._process_spam(1, u"3/10\n", "", [], 0, "")
+            pytest.fail("Should rise error, IMAP not created.")
 
         sa.noreport = True
         sa.deletehigherthan = 2
@@ -268,6 +268,6 @@ class Test_SpamAssassin(object):
         """Test process_inbox."""
         sbg = isbg.ISBG()
         sa = spamproc.SpamAssassin.create_from_isbg(sbg)
-        with pytest.raises(AttributeError, match="has no attribute",
-                           message="Should rise error, IMAP not created."):
+        with pytest.raises(AttributeError, match="has no attribute"):
             sa.process_inbox([])
+            pytest.fail("Should rise error, IMAP not created.")
