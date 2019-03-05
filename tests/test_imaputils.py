@@ -91,17 +91,6 @@ def test_imapflags():
     assert imaputils.imapflags(['foo', 'boo']) == '(foo,boo)'
 
 
-class TestIsbgImap4(object):
-    """Test IsbgImap4."""
-
-    def test(self):
-        """Test the object."""
-        with pytest.raises(gaierror, match="[Errno -5]"):
-            imaputils.IsbgImap4()
-            pytest.fail("No address associated with hostname")
-        # FIXME: require network
-
-
 def test_login_imap():
     """Test login_imap."""
     with pytest.raises(TypeError, match="ImapSettings"):
