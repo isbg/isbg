@@ -47,9 +47,9 @@ from isbg import imaputils  # noqa: E402
 
 def test_mail_content():
     """Test mail_content function."""
-    with pytest.raises(email.errors.MessageError,
-                       message="mail 'None' is not a email.message.Message."):
+    with pytest.raises(email.errors.MessageError):
         imaputils.mail_content(None)
+        pytest.fail("mail 'None' is not a email.message.Message.")
     fmail = open('examples/spam.from.spamassassin.eml', 'rb')
     ftext = fmail.read()
     mail = imaputils.new_message(ftext)
@@ -91,29 +91,18 @@ def test_imapflags():
     assert imaputils.imapflags(['foo', 'boo']) == '(foo,boo)'
 
 
-class TestIsbgImap4(object):
-    """Test IsbgImap4."""
-
-    def test(self):
-        """Test the object."""
-        with pytest.raises(gaierror, match="[Errno -5]",
-                           message="No address associated with hostname"):
-            imaputils.IsbgImap4()
-        # FIXME: require network
-
-
 def test_login_imap():
     """Test login_imap."""
-    with pytest.raises(TypeError, match="ImapSettings",
-                       message="spected a ImapSettings"):
+    with pytest.raises(TypeError, match="ImapSettings"):
         imaputils.login_imap(None)
+        pytest.fail("spected a ImapSettings")
 
     imapsets = imaputils.ImapSettings()
     imapsets.host = ''  # don't try to connect to internet
     imapsets.nossl = True
-    with pytest.raises(Exception, match="[Errno -5]",
-                       message="No address associated with hostname"):
+    with pytest.raises(Exception, match="[Errno -5]"):
         imaputils.login_imap(imapsets, logger=logging.getLogger(__name__))
+        pytest.fail("No address associated with hostname")
     # FIXME: require network
 
 

@@ -82,7 +82,6 @@ class TestISBG(object):
     def test_do_isbg(self):
         """Test do_isbg."""
         sbg = isbg.ISBG()
-        with pytest.raises(isbg.ISBGError, match="specify your imap password",
-                           message=("It should rise a specify imap password " +
-                                    "ISBGError")):
+        with pytest.raises(isbg.ISBGError, match="specify your imap password"):
             sbg.do_isbg()
+            pytest.fail("It should rise a specify imap password " + "ISBGError")

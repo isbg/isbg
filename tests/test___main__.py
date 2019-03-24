@@ -72,9 +72,9 @@ def test_parse_args():
     for op in ["--foo"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="[options]",
-                       message="It should rise a docopt SystemExit"):
+    with pytest.raises(isbg.ISBGError, match="[options]"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a docopt SystemExit")
 
     # Parse with bogus deletehigherthan
     del sys.argv[1:]
@@ -83,9 +83,9 @@ def test_parse_args():
                "0"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="too small",
-                       message="It should rise a too small ISBGError"):
+    with pytest.raises(isbg.ISBGError, match="too small"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a too small ISBGError")
 
     del sys.argv[1:]
     for op in ["--imaphost", "localhost", "--imapuser", "anonymous",
@@ -93,10 +93,9 @@ def test_parse_args():
                "foo"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="Unrecognized score",
-                       message=("It should rise a unrecognized score" +
-                                "ISBGError")):
+    with pytest.raises(isbg.ISBGError, match="Unrecognized score"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a unrecognized score" + "ISBGError")
 
     # Parse with ok deletehigherthan
     del sys.argv[1:]
@@ -114,19 +113,18 @@ def test_parse_args():
                "--imappasswd", "none", "--dryrun", "--maxsize", "0"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="too small",
-                       message="It should rise a too small ISBGError"):
+    with pytest.raises(isbg.ISBGError, match="too small"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a too small ISBGError")
 
     del sys.argv[1:]
     for op in ["--imaphost", "localhost", "--imapuser", "anonymous",
                "--imappasswd", "none", "--dryrun", "--maxsize", "foo"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="Unrecognised size",
-                       message=("It should rise a Unrecognised size" +
-                                "ISBGError")):
+    with pytest.raises(isbg.ISBGError, match="Unrecognised size"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a Unrecognised size" + "ISBGError")
 
     # Parse with ok maxsize
     del sys.argv[1:]
@@ -143,10 +141,9 @@ def test_parse_args():
                "--imappasswd", "none", "--dryrun", "--partialrun", "-10"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="equal to 0 or higher",
-                       message=("It should rise a equal to 0 or higher " +
-                                "ISBGError")):
+    with pytest.raises(isbg.ISBGError, match="equal to 0 or higher"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a equal to 0 or higher " + "ISBGError")
 
     # Parse with 0 partialrun
     del sys.argv[1:]
@@ -162,10 +159,9 @@ def test_parse_args():
                "--imappasswd", "none", "--dryrun", "--partialrun", "foo"]:
         sys.argv.append(op)
     sbg = isbg.ISBG()
-    with pytest.raises(isbg.ISBGError, match="must be a integer",
-                       message=("It should rise a invalid literal " +
-                                "ValueError")):
+    with pytest.raises(isbg.ISBGError, match="must be a integer"):
         __main__.parse_args(sbg)
+        pytest.fail("It should rise a invalid literal " + "ValueError")
 
     # Parse with ok partialrun and verbose and nossl
     del sys.argv[1:]
@@ -190,35 +186,34 @@ def test_main():
     sys.argv.append("--ignorelockfile")
 
     with mock.patch.object(isbg, "__name__", "__main__"):
-        with pytest.raises(SystemExit, match="10",
-                           message="Not error or unexpected error"):
+        with pytest.raises(SystemExit, match="10"):
             __main__.main()
+            pytest.fail("Not error or unexpected error")
 
-    with pytest.raises(SystemExit, match="10",
-                       message="Not error or unexpected error"):
-        with pytest.raises(isbg.ISBGError,
-                           match="10",
-                           message="Not error or unexpected error message"):
+    with pytest.raises(SystemExit, match="10"):
+        with pytest.raises(isbg.ISBGError, match="10"):
             __main__.main()
+            pytest.fail("Not error or unexpected error message")
+        pytest.fail("Not error or unexpected error")
 
     sys.argv.append("--version")
     with mock.patch.object(isbg, "__name__", "__main__"):
-        with pytest.raises(SystemExit,
-                           message="Not error or unexpected error"):
+        with pytest.raises(SystemExit):
             __main__.main()
+            pytest.fail("Not error or unexpected error")
 
     sys.argv.append("--exitcodes")
     with mock.patch.object(isbg, "__name__", "__main__"):
-        with pytest.raises(SystemExit,
-                           message="Not error or unexpected error"):
+        with pytest.raises(SystemExit):
             __main__.main()
+            pytest.fail("Not error or unexpected error")
 
     del sys.argv[1:]
     sys.argv.append("--usage")
     with mock.patch.object(isbg, "__name__", "__main__"):
-        with pytest.raises(SystemExit,
-                           message="Not Exit or unexpected error"):
+        with pytest.raises(SystemExit):
             __main__.main()
+            pytest.fail("Not Exit or unexpected error")
 
     # Restore pytest options:
     sys.argv = args[:]
