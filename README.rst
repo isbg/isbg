@@ -19,7 +19,8 @@ You can read the full documentation in `Read the docs`_.
 
 Support
 -------
-Please note, the current release of isbg **only supports python 3**. Python 2 is compatile with older releases.
+Please note, the current release of isbg **only supports python 3**. Python 2 is
+compatible with older releases.
 
 Features
 --------
@@ -106,9 +107,10 @@ Install program dependencies::
     $ cd /isbg
     $ python3 setup.py install -r installed_files.txt
 
-Files will be installed under ``/usr/local/``. ``installed_files.txt`` contains a list of all the dependencies installed.
+Files will be installed under ``/usr/local/``. ``installed_files.txt`` contains
+a list of all the dependencies installed.
 
-Uninstall from souce
+Uninstall from source
 ~~~~~~~~~~~~~~~~~~~~
 
 Uninstall program dependencies::
@@ -171,6 +173,19 @@ by::
 Don't forget to restart your ``spamd`` server after that (``sudo service
 spamassassin restart`` on *Debian*).
 
+Setup a DNS cacher
+''''''''''''''''''
+
+By default, *SpamAssassin* will perform many DNS lookups for NetworkTests to
+significantly improve scoring of messages primarily by DNSBlocklists like
+Spamhaus, SORBS, etc. If you don't use a DNS cacher and you run **isbg** often,
+chances are you will hit the maximum number of free accepted queries on certain
+hosts and will get blocked.
+
+To improve performance, scoring and make sure DNSBlocklists don't start blocking
+you, it is a good idea to `set up a DNS cacher`_.
+
+.. _set up a DNS cacher: https://wiki.apache.org/spamassassin/CachingNameserver#Non-forwarding
 
 CLI Options
 ~~~~~~~~~~~
@@ -333,8 +348,7 @@ By default, **isbg** ignores emails that are bigger than 120,000 bytes since
 spam are not often that big. If you ever get emails with score of 0 on 5
 (0.0/5.0), it is likely that *SpamAssassin* is skipping it due to size.
 
-Defaut maximum size can be changed with the use of the ``--maxsize``
-option.
+Default maximum size can be changed with the use of the ``--maxsize`` option.
 
 
 Partial runs
@@ -358,7 +372,7 @@ Contact and about
 
 Please join our `isbg mailing list`_ if you use **isbg** or contribute to
 it! The mailing list will be used to announce project news and to discuss
-the further developement of **isbg**.
+the further development of **isbg**.
 
 You can also hang out with us on IRC, at ``#isbg`` on Freenode.
 
