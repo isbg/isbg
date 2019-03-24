@@ -6,6 +6,9 @@ What has been done since last release.
 Unreleased
 ----------
 
+* fix deprecation notices in tests and enable python3.7 builds on the CI
+* fix typos in the documentation and add a section about DNS caching
+
 isbg 2.1.5 (20190109)
 ---------------------
 
