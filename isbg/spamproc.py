@@ -456,6 +456,8 @@ class SpamAssassin(object):
                     score = "0/10"
                     code = 0
                 processednum = processednum + 1
+                spamassassin_result = None  # since dryrun doesn't run
+                                            # test_mail()
             else:
                 score, code, spamassassin_result = test_mail(mail, cmd=self.cmd_test)
                 if score == "-9999":
