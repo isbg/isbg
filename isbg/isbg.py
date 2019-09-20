@@ -339,7 +339,7 @@ class ISBG(object):
 
         :getter: Gets the verbose property.
         :setter: Sets verbose property.
-        :type: bool.
+        :type: bool
         """
         return self._verbose
 

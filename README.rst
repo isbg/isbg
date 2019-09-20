@@ -111,7 +111,7 @@ Files will be installed under ``/usr/local/``. ``installed_files.txt`` contains
 a list of all the dependencies installed.
 
 Uninstall from source
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Uninstall program dependencies::
 
