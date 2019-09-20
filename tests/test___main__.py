@@ -36,13 +36,7 @@ try:
 except ImportError:
     pass
 
-try:
-    from unittest import mock  # Python 3
-except ImportError:
-    try:
-        import mock                # Python 2
-    except ImportError:
-        pass
+from unittest import mock
 
 # We add the upper dir to the path
 sys.path.insert(0, os.path.abspath(os.path.join(

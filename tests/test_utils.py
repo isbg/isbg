@@ -102,7 +102,6 @@ def test_shorten():
     assert dic == utils.shorten(dic, 8), "The dicts should be the same."
     dic2 = utils.shorten(dic, 7)
     assert dic != dic2, "The dicts should be diferents."
-    # Note: py2 and py3:
     assert dic2[1] in ['u\'Opti…', '\'Optio…'], "Unexpected shortened string."
     assert dic2[2] in ['u\'Opti…', '\'Optio…'], "Unexpected shortened string."
     assert dic2[3] in ['\'Optio…', 'b\'Opti…'], "Unexpected shortened string."
