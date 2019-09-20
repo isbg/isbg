@@ -7,12 +7,6 @@ and the original marked or deleted.
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-
 from .isbg import ISBG, ISBGError, __version__, __exitcodes__, __license__
 from .spamproc import learn_mail, test_mail
 from .sa_unwrap import unwrap

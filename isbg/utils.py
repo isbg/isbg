@@ -26,11 +26,6 @@
 
 """Utils for isbg - IMAP Spam Begone."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import os
 import re
 from platform import python_version  # To check py version
