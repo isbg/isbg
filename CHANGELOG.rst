@@ -9,6 +9,7 @@ Unreleased
 * fix deprecation notices in tests and enable python3.7 builds on the CI
 * fix typos in the documentation and add a section about DNS caching
 * fix an issue making --dryrun fail consistently
+* make the documentation build reproducibly
 
 isbg 2.1.5 (20190109)
 ---------------------

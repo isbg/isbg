@@ -12,6 +12,9 @@ original marked or deleted.
 .. autodata:: __exitcodes__
     :annotation: = {'ok': 0, ...}
 
+.. autodata:: xdg_cache_home
+    :annotation: = /home/user/.cache
+
 """
 
 from __future__ import absolute_import
