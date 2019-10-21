@@ -187,6 +187,22 @@ you, it is a good idea to `set up a DNS cacher`_.
 
 .. _set up a DNS cacher: https://wiki.apache.org/spamassassin/CachingNameserver#Non-forwarding
 
+Using ``spamc`` to get better performances
+''''''''''''''''''''''''''''''''''''''''''
+
+By default, *SpamAssassin* is spooled up and down each and every time **isbg**
+has an email to scan.
+
+You can improve **isbg**'s performance by running *SpamAssassin* as a daemon and
+by telling **isbg** to use that instead of running a regular process.
+
+On most Linux distributions, you can run *SpamAssassin* as a daemon this way::
+
+    $ systemclt enable spamassassin
+    $ systemctl start spamassassin
+
+You can then run **isbg** with the ``--spamc`` option to make use of the daemon.
+
 CLI Options
 ~~~~~~~~~~~
 
