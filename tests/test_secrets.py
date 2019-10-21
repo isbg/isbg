@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  test_spamaproc.py
+#  test_secrets.py
 #  This file is part of isbg.
 #
 #  Copyright 2018 Carles Muñoz Gorriz <carlesmu@internautas.org>
@@ -61,49 +61,8 @@ def test_test():
         print("not backend")
 
 
-class Test_Secret(object):
-    """Test secret class."""
-
-    def test_hash2(self):
-        """Test the hash."""
-        imapset = imaputils.ImapSettings()
-        sec = secrets.SecretIsbg(filename="", imapset=imapset)
-        sec.hashlen == len(sec.hash)
-        sec = secrets.SecretIsbg(filename="", imapset=imapset, hashlen=16)
-        sec.hashlen == len(sec.hash)
-        sec.hashlen == 16
-
-
 class Test_SecretIsbg(object):
     """Test SecretIsbg class."""
-
-    def test__obfuscate(self):
-        """Test _obfuscate."""
-        sec = secrets.SecretIsbg(filename="", imapset=imaputils.ImapSettings())
-        # We construct a password:
-        pas = sec._obfuscate(u"test")
-        pas = base64.encodebytes(bytes(pas, "utf-8"))
-        pas = pas.decode("utf-8")
-        res = """QVMVEGQ2ODYxMzdjODY0NWQ0NDAyNDA5NmEwZWQ0NDEwNjdlYmQxMTY0ZGUyMDliMWQ1ZjgzODMw
-YzBjMDBlYWE3OWI1NzU1MzEzZmUzNmU3M2YzMGM5MmU1NmE2YjFlMDM0NTIxZTg1MWFlNzM0MTgy
-NDQ5NDNlYWU1N2YwMzI0M2VhYTI0MTAyYTgwOWZkYjA5ZTBmZjkzM2UwYzIwZWI4YzhiZjZiMTRh
-NTZlOTUwYjUyNjM5MzdhNTNjMWNmOWFjNGY3ODQyZDE4MWMxNWNkMDA0MjRkODZiNmQ4NzZjM2Ez
-NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
-"""
-        assert pas == res, "Unexpected password encoded"
-
-    def test__deobfuscate(self):
-        """Test _deobfuscate."""
-        sec = secrets.SecretIsbg(filename="", imapset=imaputils.ImapSettings())
-        pas = """QVMVEGQ2ODYxMzdjODY0NWQ0NDAyNDA5NmEwZWQ0NDEwNjdlYmQxMTY0ZGUyMDliMWQ1ZjgzODMw
-YzBjMDBlYWE3OWI1NzU1MzEzZmUzNmU3M2YzMGM5MmU1NmE2YjFlMDM0NTIxZTg1MWFlNzM0MTgy
-NDQ5NDNlYWU1N2YwMzI0M2VhYTI0MTAyYTgwOWZkYjA5ZTBmZjkzM2UwYzIwZWI4YzhiZjZiMTRh
-NTZlOTUwYjUyNjM5MzdhNTNjMWNmOWFjNGY3ODQyZDE4MWMxNWNkMDA0MjRkODZiNmQ4NzZjM2Ez
-NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
-"""
-        pas = base64.b64decode(pas).decode("utf-8")
-        ret = sec._deobfuscate(pas)
-        assert ret == u"test"
 
     def test_get_and_set(self):
         """Test the get and set funcionts."""
