@@ -26,13 +26,6 @@
 .. versionadded:: 2.1.0
 """
 
-try:
-    import keyring              # noqa: F401
-    import keyrings.alt.file    # noqa: F401
-    __use_secrets_backend__ = True
-except ImportError:
-    __use_secrets_backend__ = False
-
 import abc
 import json
 import logging
@@ -237,79 +230,3 @@ class SecretIsbg(Secret):
             os.remove(self.filename)      # Remove the file.
         else:
             SecretIsbg._store_data(self.filename, json_data)
-
-
-class SecretKeyring(Secret):
-    """Class used to store secrets using the *keyring* implementation.
-
-    Attributes:
-        imapset (isbg.imaputils.ImapSettings): A imap setings object.
-        hashlen (int, optional): Length of the value hash. Must be a multiple
-            of 16. Defaults to 256.
-        keyring_backend: A keyring backend.
-
-    """
-
-    __SERVICE__ = 'isbg'
-
-    def __init__(self, imapset, hashlen=256, keyring_backend=None):
-        """Initialize a SecretKeyring object."""
-        if keyring_backend:
-            self.keyring_impl = keyring_backend
-        else:
-            self.keyring_impl = keyring.get_keyring()
-        super(SecretKeyring, self).__init__(imapset, hashlen)
-        self.logger.debug(
-            "Initialized secret storage {} using keyring storage {}".format(
-                self.__class__.__name__, self.keyring_impl.__class__.__name__))
-
-    def get(self, key):
-        """Get the value a key stored.
-
-        Args:
-            key(str): The key string requested.
-
-        Returns:
-            The value of the key or *None* if it cannot be found.
-
-        """
-        return self.keyring_impl.get_password(self.__SERVICE__,
-                                              self.hash + "-" + key)
-
-    def set(self, key, value, overwrite=True):
-        """Set a value of a key.
-
-        If it cannot find the file or their contents are not a right json data,
-        it will overwrite it with the key and value pair.
-
-        Args:
-            key (str): The key to store.
-            value (str): The value to store.
-            overwrite (boolean, optional): If *True* it should overwrite and
-                existing key. Defaults to *True*.
-
-        Raises:
-            ValueError: If overwrite is *False* and the key exists.
-
-        """
-        if not overwrite and self.get(key):
-            raise ValueError("Key '%s' exists." % key)
-
-        self.keyring_impl.set_password(self.__SERVICE__,
-                                       self.hash + '-' + key, value)
-
-    def delete(self, key):
-        """Delete the first occurrence of the key.
-
-        Args:
-            key (str): The key to store.
-
-        Raises:
-            ValueError: If the key to delete is not found.
-
-        """
-        try:
-            self.keyring_impl.delete_password(self.__SERVICE__,
-                                              self.hash + '-' + key)
-        except (keyring.errors.PasswordDeleteError):
-            raise ValueError("Key '%s' not found and cannot be deleted." % key)
