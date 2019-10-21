@@ -40,32 +40,17 @@ from isbg import imaputils    # noqa: E402
 
 # To check if a cmd exists:
 
-pytestmark = pytest.mark.xfail(reason="secrets.py needs to be re-written")
-
 def cmd_exists(x):
     """Check for a os command line."""
     return any(os.access(os.path.join(path, x), os.X_OK)
                for path in os.environ["PATH"].split(os.pathsep))
 
 
-def is_backend():
-    """Get if the keyring backend is used."""
-    return secrets.__use_secrets_backend__
-
-
-def test_test():
-    """Tests for learn_mail."""
-    if is_backend():
-        print("backend")
-    else:
-        print("not backend")
-
-
 class Test_SecretIsbg(object):
     """Test SecretIsbg class."""
 
     def test_get_and_set(self):
-        """Test the get and set funcionts."""
+        """Test the get and set functions."""
         imapset = imaputils.ImapSettings()
 
         # Test with a erroneous filename.
@@ -89,11 +74,6 @@ class Test_SecretIsbg(object):
             pytest.fail("It should raise a ValueError")
 
         assert sec.get("foo3") == "boo4"
-
-        with pytest.raises(TypeError):
-            sec.set("foo4", 4)
-            pytest.fail("A TypeError should be raised.")
-        assert sec.get("foo2") == "boo2"
 
         # Remove the created keys:
         sec.delete("foo1")
