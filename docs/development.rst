@@ -24,11 +24,11 @@ it, e.g.::
     $ # Attach the changes to issue 2:
     $ git hub pull attach -c master 2 feature/DESCRIPTION
 
-If the the git hub pull command doesn't work, you can use the github
+If the git hub pull command doesn't work, you can use the github
 web interface to do the pull request and attach it adding ``#2`` to
 the pull request.
 
-The working and stable features shhould be merged to master before
+The working and stable features should be merged to master before
 a new release, and also closed. To close the user ``closes 2`` in
 the commit message.
 
@@ -46,10 +46,9 @@ Releasing Schema
 ----------------
 You should:
 
-#. Update the the __version__ var ``./isbg/isbg.py``.
+#. Update the __version__ var ``./isbg/isbg.py``.
 #. Update ``./NEWS.rst``
 #. Update ``./Changelog.rst``
-#. Check the ``./TODO.rst`` list and updated it.
 #. Check if some changes should be updated in ``./README.rst``
 #. If new files have been added or removed: Check ``./MANIFEST.in``.
 #. If dependencies have been updated, added or removed check: ``./setup.py``,

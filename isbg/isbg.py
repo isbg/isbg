@@ -268,13 +268,6 @@ class ISBG(object):
         self.imapsets = imaputils.ImapSettings()
         self.imap = None
 
-        # FIXME: This could be used when ran non-interactively, maybe with
-        # the --noninteractive argument (instead of the addHandler:
-        # logging.basicConfig(
-        #    format=('%(asctime)s %(levelname)-8s [%(filename)s'
-        #            + '%(lineno)d] %(message)s'),
-        #    datefmt='%Y%m%d %H:%M:%S %Z')
-        # see https://docs.python.org/2/howto/logging-cookbook.html
         self.logger = logging.getLogger(__name__)       #: a logger
         self.logger.addHandler(logging.StreamHandler())
 
@@ -439,7 +432,6 @@ class ISBG(object):
             lockfile.write(repr(os.getpid()))
             lockfile.close()
 
-            #: FIXME: May be found a better way that use of atexit
             # Make sure to delete lock file
             atexit.register(self.removelock)
 
