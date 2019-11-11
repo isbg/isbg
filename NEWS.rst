@@ -4,6 +4,13 @@ News [#]_
 Unreleased
 ----------
 
+New in 2.1.5
+~~~~~~~~~~~~
+
+* isbg is now in Debian! It will not reach Debian Stable until Debian 11, but
+  until then you can either use the version in unstable, or the (yet to be)
+  versions in testing and stable-backports.
+
 New in 2.1.0
 ~~~~~~~~~~~~
 
