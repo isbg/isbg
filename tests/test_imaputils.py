@@ -50,7 +50,7 @@ def test_mail_content():
     with pytest.raises(email.errors.MessageError):
         imaputils.mail_content(None)
         pytest.fail("mail 'None' is not a email.message.Message.")
-    fmail = open('examples/spam.from.spamassassin.eml', 'rb')
+    fmail = open('tests/examples/spam.from.spamassassin.eml', 'rb')
     ftext = fmail.read()
     mail = imaputils.new_message(ftext)
     fmail.close()
@@ -59,7 +59,7 @@ def test_mail_content():
 
 def test_new_message():
     """Test new_message function."""
-    fmail = open('examples/spam.from.spamassassin.eml', 'rb')
+    fmail = open('tests/examples/spam.from.spamassassin.eml', 'rb')
     ftext = fmail.read()
     mail = imaputils.new_message(ftext)
     fmail.close()

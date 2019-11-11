@@ -255,7 +255,7 @@ and it will automatically keep the tracked UIDs separate. You can
 override the filename with ``--trackfile``.
 
 To run **isbg** for multiple accounts one after another, it is possible to use
-bash scripts like the ones in the folder "bash\_scripts". Since these scripts
+bash scripts like the ones in the examples directory. Since these scripts
 contain passwords and are thus sensitive data, make sure the file permissions
 are very restrictive.
 

@@ -55,7 +55,7 @@ def cmd_exists(x):
 
 def test_learn_mail():
     """Tests for learn_mail."""
-    fmail = open('examples/spam.eml', 'rb')
+    fmail = open('tests/examples/spam.eml', 'rb')
     ftext = fmail.read()
     mail = new_message(ftext)
     fmail.close()
@@ -81,7 +81,7 @@ def test_learn_mail():
 
 def test_test_mail():
     """Tests for learn_mail."""
-    fmail = open('examples/spam.eml', 'rb')
+    fmail = open('tests/examples/spam.eml', 'rb')
     ftext = fmail.read()
     mail = new_message(ftext)
     fmail.close()

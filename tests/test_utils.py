@@ -81,14 +81,14 @@ def test_get_ascii_or_value():
 def test_score_from_mail():
     """Test score_from_mail."""
     # Without score:
-    fmail = open('examples/spam.eml', 'rb')
+    fmail = open('tests/examples/spam.eml', 'rb')
     ftext = fmail.read()
     fmail.close()
     with pytest.raises(AttributeError):
         ret = utils.score_from_mail(ftext.decode(errors='ignore'))
         pytest.fail("Should rise AttributeError.")
     # With score:
-    fmail = open('examples/spam.from.spamassassin.eml', 'rb')
+    fmail = open('tests/examples/spam.from.spamassassin.eml', 'rb')
     ftext = fmail.read()
     fmail.close()
     ret = utils.score_from_mail(ftext.decode(errors='ignore'))

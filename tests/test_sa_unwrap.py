@@ -49,7 +49,7 @@ def test_sa_unwrap_from_email():
     """
     Test parsing a file with a message no multipart. It should return none.
     """
-    f = open('examples/spam.eml', 'rb')
+    f = open('tests/examples/spam.eml', 'rb')
     ret = sa_unwrap.sa_unwrap_from_email(sa_unwrap.PARSE_FILE(f))
     f.close()
     assert ret is None, "%r is not a None." % ret
@@ -58,7 +58,7 @@ def test_sa_unwrap_from_email():
     Test creating a multipart message with 1 message from a file.
     It should return 1 Message.
     """
-    f = open('examples/spam.from.spamassassin.eml', 'rb')
+    f = open('tests/examples/spam.from.spamassassin.eml', 'rb')
     ftext = f.read()
     ret = sa_unwrap.sa_unwrap_from_email(sa_unwrap.MESSAGE(ftext))
     f.close()
@@ -88,8 +88,8 @@ def test_sa_unwrap_from_email():
 
 def test_unwrap():
     """Test funcition unwrap."""
-    """Test unwrap of examples/spam.from.spamassassin.eml --> 1 message."""
-    f = open('examples/spam.from.spamassassin.eml', 'rb')
+    """Test unwrap of tests/examples/spam.from.spamassassin.eml --> 1 message."""
+    f = open('tests/examples/spam.from.spamassassin.eml', 'rb')
     mails = sa_unwrap.unwrap(f)
     f.close()
     num_mails = 0
@@ -99,8 +99,8 @@ def test_unwrap():
         num_mails = num_mails + 1
     assert num_mails == 1, "%d mails found" % num_mails
 
-    """Test unwrap of examples/spam.eml --> None."""
-    f = open('examples/spam.eml', 'rb')
+    """Test unwrap of tests/examples/spam.eml --> None."""
+    f = open('tests/examples/spam.eml', 'rb')
     mails = sa_unwrap.unwrap(f)
     f.close()
     assert mails is None
@@ -116,7 +116,7 @@ def test_isbg_sa_unwrap(capsys):
     del sys.argv[1:]
 
     sys.argv.append('-f')
-    sys.argv.append('examples/spam.eml')
+    sys.argv.append('tests/examples/spam.eml')
     sa_unwrap.isbg_sa_unwrap()
     out, err = capsys.readouterr()
     assert err == "No spam into the mail detected.\n"
@@ -134,7 +134,7 @@ def test_isbg_sa_unwrap_main(capsys):
 
     with mock.patch.object(sa_unwrap, "__name__", "__main__"):
         sys.argv.append('-f')
-        sys.argv.append('examples/spam.from.spamassassin.eml')
+        sys.argv.append('tests/examples/spam.from.spamassassin.eml')
         sa_unwrap.isbg_sa_unwrap()
         out, err = capsys.readouterr()
         assert (out.startswith("Return-Path: <2587-84-162546-580") or
