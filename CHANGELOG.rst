@@ -6,10 +6,15 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.2.0 (20191113)
+---------------------
+
+* deprecate unused SecretyKeyring class and fix the testsuite for secrets
 * fix deprecation notices in tests and enable python3.7 builds on the CI
 * fix typos in the documentation and add a section about DNS caching
 * fix an issue making --dryrun fail consistently
 * make the documentation build reproducibly
+* remove old python2 references in the code
 
 isbg 2.1.5 (20190109)
 ---------------------
