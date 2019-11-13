@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  test_spamaproc.py
+#  test_secrets.py
 #  This file is part of isbg.
 #
 #  Copyright 2018 Carles Muñoz Gorriz <carlesmu@internautas.org>
@@ -40,73 +40,17 @@ from isbg import imaputils    # noqa: E402
 
 # To check if a cmd exists:
 
-pytestmark = pytest.mark.xfail(reason="secrets.py needs to be re-written")
-
 def cmd_exists(x):
     """Check for a os command line."""
     return any(os.access(os.path.join(path, x), os.X_OK)
                for path in os.environ["PATH"].split(os.pathsep))
 
 
-def is_backend():
-    """Get if the keyring backend is used."""
-    return secrets.__use_secrets_backend__
-
-
-def test_test():
-    """Tests for learn_mail."""
-    if is_backend():
-        print("backend")
-    else:
-        print("not backend")
-
-
-class Test_Secret(object):
-    """Test secret class."""
-
-    def test_hash2(self):
-        """Test the hash."""
-        imapset = imaputils.ImapSettings()
-        sec = secrets.SecretIsbg(filename="", imapset=imapset)
-        sec.hashlen == len(sec.hash)
-        sec = secrets.SecretIsbg(filename="", imapset=imapset, hashlen=16)
-        sec.hashlen == len(sec.hash)
-        sec.hashlen == 16
-
-
 class Test_SecretIsbg(object):
     """Test SecretIsbg class."""
 
-    def test__obfuscate(self):
-        """Test _obfuscate."""
-        sec = secrets.SecretIsbg(filename="", imapset=imaputils.ImapSettings())
-        # We construct a password:
-        pas = sec._obfuscate(u"test")
-        pas = base64.encodebytes(bytes(pas, "utf-8"))
-        pas = pas.decode("utf-8")
-        res = """QVMVEGQ2ODYxMzdjODY0NWQ0NDAyNDA5NmEwZWQ0NDEwNjdlYmQxMTY0ZGUyMDliMWQ1ZjgzODMw
-YzBjMDBlYWE3OWI1NzU1MzEzZmUzNmU3M2YzMGM5MmU1NmE2YjFlMDM0NTIxZTg1MWFlNzM0MTgy
-NDQ5NDNlYWU1N2YwMzI0M2VhYTI0MTAyYTgwOWZkYjA5ZTBmZjkzM2UwYzIwZWI4YzhiZjZiMTRh
-NTZlOTUwYjUyNjM5MzdhNTNjMWNmOWFjNGY3ODQyZDE4MWMxNWNkMDA0MjRkODZiNmQ4NzZjM2Ez
-NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
-"""
-        assert pas == res, "Unexpected password encoded"
-
-    def test__deobfuscate(self):
-        """Test _deobfuscate."""
-        sec = secrets.SecretIsbg(filename="", imapset=imaputils.ImapSettings())
-        pas = """QVMVEGQ2ODYxMzdjODY0NWQ0NDAyNDA5NmEwZWQ0NDEwNjdlYmQxMTY0ZGUyMDliMWQ1ZjgzODMw
-YzBjMDBlYWE3OWI1NzU1MzEzZmUzNmU3M2YzMGM5MmU1NmE2YjFlMDM0NTIxZTg1MWFlNzM0MTgy
-NDQ5NDNlYWU1N2YwMzI0M2VhYTI0MTAyYTgwOWZkYjA5ZTBmZjkzM2UwYzIwZWI4YzhiZjZiMTRh
-NTZlOTUwYjUyNjM5MzdhNTNjMWNmOWFjNGY3ODQyZDE4MWMxNWNkMDA0MjRkODZiNmQ4NzZjM2Ez
-NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
-"""
-        pas = base64.b64decode(pas).decode("utf-8")
-        ret = sec._deobfuscate(pas)
-        assert ret == u"test"
-
     def test_get_and_set(self):
-        """Test the get and set funcionts."""
+        """Test the get and set functions."""
         imapset = imaputils.ImapSettings()
 
         # Test with a erroneous filename.
@@ -131,11 +75,6 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
 
         assert sec.get("foo3") == "boo4"
 
-        with pytest.raises(TypeError):
-            sec.set("foo4", 4)
-            pytest.fail("A TypeError should be raised.")
-        assert sec.get("foo2") == "boo2"
-
         # Remove the created keys:
         sec.delete("foo1")
         assert sec.get("foo1") is None
@@ -155,46 +94,6 @@ NTk2YTEyMDIyYTM4ZDc3YjM3Mzk2OGNlMzc1Yg==
             pytest.fail("A EnvironmentError should be raised.")
 
         # Remove non existant key in non existant file:
-        with pytest.raises(ValueError, match="Key 'foo4' not"):
-            sec.delete("foo4")
-            pytest.fail("It should raise a ValueError")
-
-
-class Test_SecretKeyring(object):
-    """Test SecretKeyring class."""
-
-    def test_get_and_set(self):
-        """Test the get and set funcionts."""
-        imapset = imaputils.ImapSettings()
-
-        # Test:
-        sec = secrets.SecretKeyring(imapset=imapset)
-        assert sec.get("foo") is None
-        sec.set("foo1", "boo1")
-        sec.set("foo2", "boo2")
-        sec.set("foo3", "boo3")
-        sec.set("foo3", "boo4")
-        assert sec.get("foo3") == "boo4"
-
-        with pytest.raises(ValueError, match="Key 'foo3' exists."):
-            sec.set("foo3", "boo5", overwrite=False)
-            pytest.fail("It should raise a ValueError")
-
-        # Remove the created keys:
-        sec.delete("foo1")
-        assert sec.get("foo1") is None
-        sec.delete("foo2")
-        assert sec.get("foo2") is None
-
-        # Remove non existant key:
-        with pytest.raises(ValueError, match="Key 'foo4' not"):
-            sec.delete("foo4")
-            pytest.fail("It should raise a ValueError")
-
-        sec.delete("foo3")
-        assert sec.get("foo3") is None
-
-        # Remove non existant key:
         with pytest.raises(ValueError, match="Key 'foo4' not"):
             sec.delete("foo4")
             pytest.fail("It should raise a ValueError")
