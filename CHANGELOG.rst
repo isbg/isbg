@@ -6,6 +6,11 @@ What has been done since last release.
 Unreleased
 ----------
 
+isbg 2.2.1 (20191113)
+---------------------
+
+* minor modifications to the README to make releasing to PyPi possible again.
+
 isbg 2.2.0 (20191113)
 ---------------------
 

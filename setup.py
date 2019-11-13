@@ -31,6 +31,7 @@ setup(
         'a script that makes it easy to scan an IMAP inbox for spam using'
         + 'SpamAssassin and get your spam moved to another folder.'),
     long_description=LDESC,
+    long_description_content_type="text/x-rst",
     keywords='email imap spamassasin filter',
     author='ISBG contributors (see CONTRIBUTORS file)',
     author_email='isbg@python.org',

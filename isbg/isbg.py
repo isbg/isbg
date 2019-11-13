@@ -57,7 +57,7 @@ Note:
 """
 
 
-__version__ = "2.2.0"  #: The current isbg version
+__version__ = "2.2.1"  #: The current isbg version
 
 __license__ = \
     """License GPLv3: GNU GPL version 3 https://gnu.org/licenses/gpl.html
