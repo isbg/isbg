@@ -25,11 +25,6 @@ Examples:
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function  # Now we can use print(...
-from __future__ import unicode_literals
-
 import email
 import email.message
 from io import IOBase
