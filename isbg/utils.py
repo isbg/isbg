@@ -33,7 +33,6 @@ from __future__ import unicode_literals
 
 import os
 import re
-from platform import python_version  # To check py version
 from subprocess import Popen, PIPE   # To call Popen
 
 try:
@@ -147,26 +146,15 @@ def get_ascii_or_value(value):
         The `value` object with its contents translated if it was possible.
 
     Note:
-        In `python3` we get the ``uids`` info as binary when using the
-        methods of :py:class:`isbg.imaputils.IsbgImap4`.
-
-        In `python2` if we get a `UnicodeDecodeError` we try first to get it
-        in the detected encoded using the `cchardet` or `chardet` module.
+        We get the ``uids`` info as binary when using the methods of
+        :py:class:`isbg.imaputils.IsbgImap4`.
 
     Examples:
-        `Python2`:
-            >>> get_ascii_or_value('isbg - IMAP Spam Begone')
-            u'isbg - IMAP Spam Begone'
-            >>> d = {'isbg': (u'IMAP',[b'Spam', r'Begone'])}
-            >>> get_ascii_or_value(d)
-            {u'isbg': (u'IMAP', [u'Spam', u'Begone'])}
-
-        `Python3`:
-            >>> get_ascii_or_value('isbg - IMAP Spam Begone')
-            'isbg - IMAP Spam Begone'
-            >>> d = {'isbg': (u'IMAP', [b'Spam', r'Begone'])}
-            >>> get_ascii_or_value(d)
-            {'isbg': ('IMAP', ['Spam', 'Begone'])}
+        >>> get_ascii_or_value('isbg - IMAP Spam Begone')
+        'isbg - IMAP Spam Begone'
+        >>> d = {'isbg': (u'IMAP', [b'Spam', r'Begone'])}
+        >>> get_ascii_or_value(d)
+        {'isbg': ('IMAP', ['Spam', 'Begone'])}
 
     """
     def _get_ascii_or_value(val):
@@ -178,18 +166,10 @@ def get_ascii_or_value(value):
             The value converted (or nor).
 
         """
-        #: v2.0: In python3 we get the uids as binary, we try to normalized it
-        #: to ascii or work as bytes.
         try:
             return val.decode('ascii')
         except UnicodeDecodeError:
-            if python_version() > "3":
-                return val
-            else:
-                try:
-                    return val.decode(detect_enc(val)['encoding'])
-                except (UnicodeDecodeError, TypeError):
-                    return val
+            return val
 
     if isinstance(value, bytes):
         return _get_ascii_or_value(value)

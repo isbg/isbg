@@ -87,12 +87,8 @@ class Test_SecretIsbg(object):
         sec = secrets.SecretIsbg(filename="", imapset=imaputils.ImapSettings())
         # We construct a password:
         pas = sec._obfuscate(u"test")
-        try:
-            # pylint: disable=no-member
-            pas = base64.encodebytes(bytes(pas, "utf-8"))   # py3
-            pas = pas.decode("utf-8")
-        except (TypeError, AttributeError):
-            pas = base64.encodestring(pas)                  # py2
+        pas = base64.encodebytes(bytes(pas, "utf-8"))
+        pas = pas.decode("utf-8")
         res = """QVMVEGQ2ODYxMzdjODY0NWQ0NDAyNDA5NmEwZWQ0NDEwNjdlYmQxMTY0ZGUyMDliMWQ1ZjgzODMw
 YzBjMDBlYWE3OWI1NzU1MzEzZmUzNmU3M2YzMGM5MmU1NmE2YjFlMDM0NTIxZTg1MWFlNzM0MTgy
 NDQ5NDNlYWU1N2YwMzI0M2VhYTI0MTAyYTgwOWZkYjA5ZTBmZjkzM2UwYzIwZWI4YzhiZjZiMTRh

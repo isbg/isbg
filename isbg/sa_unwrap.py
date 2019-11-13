@@ -6,11 +6,8 @@ Parse an *rfc2822* email message and unwrap it if contains spam attached.
 
 To know it it checks for an x-spam-type=original payload.
 
-Works on python 2.7+ and 3.x (uses some fairly ugly hacks to do so)
-
-Does not perfectly preserve whitespace (esp. \r\n vs. \n and \t vs space), also
-does that differently between python 2 and python 3, but this should not impact
-spam-learning purposes.
+Does not perfectly preserve whitespace (esp. \r\n vs. \n and \t vs space),
+but this should not impact spam-learning purposes.
 
 Examples:
     It will return the original mail into a spamassassin mail:
@@ -52,18 +49,9 @@ except ImportError:
     sys.stderr.write("Missing dependency: docopt\n")
     raise
 
-# works with python 2 and 3
-try:
-    FILE_TYPES = (file, IOBase)  #: The `stdin` is also a file.
-except NameError:
-    FILE_TYPES = (IOBase,)  # Python 3
-
-try:
-    PARSE_FILE = email.message_from_binary_file  # Python3
-    MESSAGE = email.message_from_bytes           # Python3
-except AttributeError:
-    PARSE_FILE = email.message_from_file         # Python2
-    MESSAGE = email.message_from_string          # Python2+3
+FILE_TYPES = (IOBase,)
+PARSE_FILE = email.message_from_binary_file
+MESSAGE = email.message_from_bytes
 
 
 def sa_unwrap_from_email(msg):
@@ -110,10 +98,7 @@ def unwrap(mail):
         return sa_unwrap_from_email(mail)
     if isinstance(mail, FILE_TYPES):  # files are also stdin...
         return sa_unwrap_from_email(PARSE_FILE(mail))
-    try:
-        mail = email.message_from_bytes(mail)  # py3 only
-    except AttributeError:
-        mail = email.message_from_string(mail)
+    mail = email.message_from_bytes(mail)
     return sa_unwrap_from_email(mail)
 
 
@@ -165,7 +150,6 @@ def isbg_sa_unwrap():
         file_in = sys.stdin
 
     if hasattr(file_in, 'buffer'):
-        # select byte streams if they exist (on python 3)
         file_in = file_in.buffer    # pylint: disable=no-member
 
     spams = unwrap(file_in.read())

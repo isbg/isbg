@@ -70,9 +70,9 @@ def test_new_message():
     assert isinstance(mail, email.message.Message), \
         "%r is not a email.message.Message." % mail
 
-    with pytest.raises((TypeError, AttributeError)):
+    with pytest.raises(TypeError):
         imaputils.new_message(None)
-    with pytest.raises((TypeError, AttributeError)):
+    with pytest.raises(TypeError):
         imaputils.new_message(body="")
     with pytest.raises(TypeError, match="cannot be empty"):
         imaputils.new_message(body=b"")

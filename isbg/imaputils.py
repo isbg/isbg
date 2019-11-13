@@ -56,7 +56,7 @@ def mail_content(mail):
 
     Returns:
         :obj:`bytes` or :obj:`str`: The contents, with headers, of the email
-        message. In python 3 it returns `bytes`.
+        message. It returns `bytes`.
 
     Raises:
         email.errors.MessageError:  if mail is neither *bytes* nor *str*.
@@ -66,8 +66,8 @@ def mail_content(mail):
         raise email.errors.MessageError(
             "mail '{}' is not a email.message.Message.".format(repr(mail)))
     try:
-        return mail.as_bytes()  # python 3
-    except (AttributeError, UnicodeEncodeError):
+        return mail.as_bytes()
+    except UnicodeEncodeError:
         return mail.as_string()
 
 
@@ -91,14 +91,11 @@ def new_message(body):
     mail = None
 
     if isinstance(body, bytes):
-        try:
-            mail = email.message_from_bytes(body)  # pylint: disable=no-member
-            if mail.as_bytes() in [b'', b'\n']:
-                raise TypeError(
-                    __("body '{}' cannot be empty.".format(repr(body))))
-            return mail
-        except AttributeError:  # py2
-            pass
+        mail = email.message_from_bytes(body)  # pylint: disable=no-member
+        if mail.as_bytes() in [b'', b'\n']:
+            raise TypeError(
+                __("body '{}' cannot be empty.".format(repr(body))))
+        return mail
 
     try:
         mail = email.message_from_string(body)

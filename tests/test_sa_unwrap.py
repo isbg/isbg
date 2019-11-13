@@ -30,13 +30,7 @@ import os
 import sys
 import email.message
 
-try:
-    from unittest import mock      # Python 3
-except ImportError:
-    try:
-        import mock                # Python 2
-    except ImportError:
-        pass
+from unittest import mock
 
 # We add the upper dir to the path
 sys.path.insert(0, os.path.abspath(os.path.join(
@@ -69,14 +63,13 @@ def test_sa_unwrap_from_email():
         num_mails = num_mails + 1
     assert num_mails == 1, "%d mails found" % num_mails
 
-    if sys.version_info[0] > 3:  # Only python 3
-        """
-        Test a very simple message created from his bytes.
-        It should return None.
-        """
-        # pylint: disable=no-member
-        ret = sa_unwrap.sa_unwrap_from_email(email.message_from_bytes(b'0000'))
-        assert ret is None, "%r is not a None." % ret
+    """
+    Test a very simple message created from his bytes.
+    It should return None.
+    """
+    # pylint: disable=no-member
+    ret = sa_unwrap.sa_unwrap_from_email(email.message_from_bytes(b'0000'))
+    assert ret is None, "%r is not a None." % ret
 
     """
     Test a very simple message created from his strings.
