@@ -459,6 +459,7 @@ class ISBG(object):
                                      imapset=self.imapsets)
             sec.set("password", self.imapsets.passwd)
             del sec
+            self.logger.info('Note that passwords are saved in plain-text.')
         except Exception:  # pylint: disable=broad-except
             self.logger.exception('Error saving pw!')
 
